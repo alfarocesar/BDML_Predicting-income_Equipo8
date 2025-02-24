@@ -6,9 +6,15 @@
 
 \usepackage[margin=1in]{geometry}
 \usepackage{authblk}
-\usepackage[latin1]{inputenc}
+
+% CODIFICACIÓN Y SOPORTE PARA ESPAÑOL
+\usepackage[utf8]{inputenc}  % UTF-8 evita problemas de caracteres
+\usepackage[T1]{fontenc}     % Mejor soporte de fuentes en LaTeX
+\usepackage[spanish]{babel}  % Manejo correcto de idioma español
+
 \usepackage{amsfonts}
-\usepackage{a4wide,graphicx,color}
+\usepackage{graphicx}
+\usepackage{xcolor}  % Ya incluye "color", por lo que eliminamos "color.sty"
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage[table]{xcolor}
@@ -16,7 +22,6 @@
 \usepackage{booktabs}
 \usepackage{dcolumn}
 \usepackage{rotating}
-\usepackage{color,soul}
 \usepackage{threeparttable}
 \usepackage[capposition=top]{floatrow}
 \usepackage[labelsep=period]{caption}
@@ -31,21 +36,22 @@
 \usepackage{placeins}
 \usepackage{booktabs,multirow}
 
-%% BibTeX settings
+% Bibliografía
 \usepackage{natbib}
 \bibliographystyle{apalike}
 \bibpunct{(}{)}{,}{a}{,}{,}
 
-%% Formato de párrafos
+% Formato de párrafos
 \renewcommand{\baselinestretch}{1}
 
-% Define columnas para tablas
+% Definir columnas para tablas
 \usepackage{array}
 \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 
-\usepackage{comment}
+% \usepackage{comment}  % Por ahora comentado
+
 \usepackage{xfrac}
 \usepackage{bbold}
 
@@ -62,7 +68,13 @@
 
 \title{Predicción de Ingresos: \\ Análisis del Mercado Laboral en Bogotá}
 
-\author{[Nombres de los Autores]} 
+\author{
+    \centering
+    Harold Stiven Acuña \newline
+    José David Cuervo \newline
+    José David Dávila \newline
+    César Augusto Alfaro
+} 
 \date{\today}
 
 \begin{document}
@@ -81,8 +93,8 @@
 \medskip
 
 \begin{flushleft}
-    {\bf Keywords:} income prediction, wage gap, labor economics, machine learning \\
-    {\bf JEL Classification:} J31, C53, J16
+    {\bf Palabras clave:} predicción de ingresos, brecha salarial, economía laboral, aprendizaje automático \\
+    {\bf Clasificación JEL:} J31, C53, J16
 \end{flushleft}
 
 \pagebreak
