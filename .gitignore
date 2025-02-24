@@ -17,6 +17,7 @@
 docs/
 po/*~
 rsconnect/
+*.Rproj
 
 # RStudio files
 *.Rproj
