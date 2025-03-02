@@ -68,13 +68,15 @@
 
 \title{Predicción de Ingresos: \\ Análisis del Mercado Laboral en Bogotá}
 
-\author{
-    \centering
-    Harold Stiven Acuña \newline
-    José David Cuervo \newline
-    José David Dávila \newline
-    César Augusto Alfaro
-} 
+\author{%
+\begin{center}
+Harold Stiven Acuña \\
+José David Cuervo \\
+José David Dávila \\
+César Augusto Alfaro
+\end{center}%
+}
+
 \date{\today}
 
 \begin{document}
@@ -97,6 +99,11 @@
     {\bf Clasificación JEL:} J31, C53, J16
 \end{flushleft}
 
+% Añadir información del repositorio GitHub
+\begin{center}
+    \textit{Repositorio GitHub:} \url{https://github.com/alfarocesar/BDML_Predicting-income_Equipo8}
+\end{center}
+
 \pagebreak
 \doublespacing
 
@@ -105,10 +112,38 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Introducción}
-[Introducción siguiendo el formato RAP: Research question, Answer, Positioning]
+En el sector público, la precisión en el reporte de ingresos individuales es fundamental para el cálculo adecuado de impuestos. Sin embargo, el fraude fiscal es un problema por resolver para los sistemas tributarios en todo el mundo. De acuerdo con el Servicio de Impuestos Internos (IRS) de Estados Unidos, aproximadamente el 83.6\% de los impuestos son pagados voluntariamente y a tiempo en ese país, lo que evidencia la existencia de una brecha tributaria considerable. Una de las principales causas de esta brecha es la subdeclaración de ingresos por parte de los contribuyentes.
+
+El desarrollo de modelos predictivos de ingresos puede ser una herramienta valiosa para abordar este problema desde dos perspectivas complementarias. Por un lado, estos modelos pueden ayudar a identificar posibles casos de fraude fiscal al detectar discrepancias significativas entre los ingresos reportados y los estimados según las características sociodemográficas y laborales de los individuos. Por otro lado, pueden contribuir a la identificación de personas y familias en situación de vulnerabilidad que podrían requerir asistencia adicional por parte del Estado.
+
+En Colombia, el Departamento Administrativo Nacional de Estadística (DANE) ha desarrollado metodologías para la medición de pobreza monetaria y desigualdad, utilizando información de la Gran Encuesta Integrada de Hogares (GEIH). Estos esfuerzos proporcionan una base sólida para la construcción de modelos predictivos de ingresos. La Misión para el Empalme de las Series de Empleo, Pobreza y Desigualdad (MESEP) ha realizado un trabajo significativo en la actualización y mejora de las metodologías de medición, considerando tanto el método indirecto de estimación de ingresos como el enfoque del costo de necesidades básicas.
+
+En este contexto, el presente estudio se propone construir un modelo predictivo de ingresos utilizando datos de la GEIH 2018 para Bogotá, con el objetivo de explorar las relaciones entre características individuales y niveles de ingreso, así como evaluar la capacidad predictiva de diferentes especificaciones estadísticas. La investigación se centra particularmente en el análisis del perfil edad-salario y la brecha salarial de género, temas de gran relevancia tanto para la política fiscal como para las políticas de equidad e inclusión social.
+
+Utilizaremos técnicas de web scraping para extraer la información de la muestra de la GEIH 2018 disponible en la página web https://ignaciomsarmiento.github.io/GEIH2018\_sample/, limpiaremos los datos y desarrollaremos diversos modelos estadísticos para identificar los determinantes del ingreso individual y evaluar su capacidad predictiva.
 
 \section{Datos}
-[Descripción de datos GEIH y proceso de web scraping]
+En esta sección se presenta el proceso de obtención, limpieza y análisis descriptivo de los datos utilizados para modelar los salarios individuales en Bogotá.
+
+\subsection{Descripción de los datos}
+% (a) Describe the data briefly, including its purpose, and any other relevant information.
+
+\subsection{Proceso de adquisición de datos}
+% (b) Describe the process of acquiring the data and if there are any restrictions to accessing/scraping these data.
+
+Los datos utilizados en este análisis fueron obtenidos mediante técnicas de web scraping del sitio web oficial que contiene la muestra de la Gran Encuesta Integrada de Hogares (GEIH) 2018 para Bogotá. El proceso de extracción se realizó mediante un script programado en R que accede a los archivos HTML distribuidos en múltiples páginas del repositorio en línea.
+
+Para la adquisición de los datos, desarrollamos un algoritmo automatizado que identifica y extrae las tablas contenidas en cada una de las diez páginas HTML disponibles en el sitio \url{https://ignaciomsarmiento.github.io/GEIH2018_sample/}. El proceso consistió en realizar solicitudes HTTP a cada URL, procesar el contenido HTML recibido y extraer las estructuras tabulares utilizando las bibliotecas \texttt{httr} y \texttt{rvest} en R.
+
+Una consideración importante durante la extracción fue la necesidad de respetar las políticas del sitio web, incluyendo pausas entre solicitudes para evitar sobrecargar el servidor. No se identificaron restricciones explícitas para el acceso a estos datos, ya que se encuentran disponibles públicamente con fines académicos. Sin embargo, aplicamos prácticas éticas de web scraping, limitando la frecuencia de solicitudes y utilizando únicamente los datos necesarios para nuestro análisis.
+
+El código desarrollado para esta tarea se encuentra disponible en nuestro repositorio de GitHub, permitiendo la reproducibilidad completa del proceso de adquisición de datos.
+
+\subsection{Proceso de limpieza de datos}
+% (c) Describe the data cleaning process
+
+\subsection{Variables incluidas en el análisis}
+% (d) Descriptive the variables included in your analysis.
 
 \section{Perfil Edad-Salario}
 [Análisis del perfil edad-salario]
