@@ -2,101 +2,140 @@
 # 02_data_cleaning.R
 # 
 # Este script realiza la limpieza y preparación de los datos de la GEIH 2018
-# obtenidos mediante webscraping. Se enfoca en individuos empleados mayores de 18 años
-# y en la creación de variables clave para el análisis de ingresos.
-#
+# para el análisis de ingresos.
 # =========================================================================
 
-# Establecer el directorio de trabajo automáticamente en base a la ubicación del script
-if (!require(rstudioapi)) install.packages("rstudioapi")
-setwd(dirname(dirname(rstudioapi::getActiveDocumentContext()$path)))
-
-# Cargar librerías necesarias
-if (!require(pacman)) install.packages("pacman")
-pacman::p_load(
-  tidyverse, janitor, naniar, skimr, lubridate, scales, ggthemes, patchwork, kableExtra, mice, corrplot
+# Cargar paquetes necesarios
+if(!require(pacman)) install.packages("pacman")
+pacman::p_load(rio,      # importar/exportar datos
+               tidyverse, # manipulación de datos
+               skimr,     # resumen de datos
+               corrplot,  # gráficos de correlación
+               stargazer, # tablas de resultados
+               visdat,    # visualización de valores faltantes
+               ggplot2    # generación de gráficos
 )
 
-# Configuración inicial
-raw_data_dir <- file.path(getwd(), "stores/raw")
-processed_data_dir <- file.path(getwd(), "stores/processed")
-figures_dir <- file.path(getwd(), "views/figures")
-tables_dir <- file.path(getwd(), "views/tables")
+# =========================================================================
+# 1. Carga de datos
+# =========================================================================
+# Cargar los datos obtenidos por web scraping
+message("Cargando datos...")
+geih_raw <- import("stores/raw/geih_2018_raw.rds")
+geih_raw <- as_tibble(geih_raw) # convertir a tibble
 
-# Crear directorios si no existen
-for (dir in c(processed_data_dir, figures_dir, tables_dir)) {
-  if (!dir.exists(dir)) {
-    dir.create(dir, recursive = TRUE)
-    message(glue::glue("Directorio '{dir}' creado."))
-  }
-}
+# Dimensiones del conjunto de datos
+message(paste("Dimensiones originales:", dim(geih_raw)[1], "filas y", 
+              dim(geih_raw)[2], "columnas"))
 
-# Cargar datos crudos
-message("Cargando datos crudos...")
-geih_raw <- readRDS(file.path(raw_data_dir, "geih_2018_raw.rds"))
-message(glue::glue("Dimensiones de los datos crudos: {nrow(geih_raw)} filas y {ncol(geih_raw)} columnas"))
+# =========================================================================
+# 1.1 Exploración de valores faltantes
+# =========================================================================
+message("Resumen de valores faltantes:")
+skimr::skim(geih_raw) # Resumen de valores faltantes
 
-# Limpieza de nombres de variables
+message("Visualización de valores faltantes:")
+missing_values_plot <- visdat::vis_miss(geih_raw %>% slice_sample(n = 5000))
+ggsave("views/figures/missing_values.png", plot = missing_values_plot, width = 8, height = 6)
+
+# =========================================================================
+# 1.2 Correlación entre valores faltantes
+# =========================================================================
+message("Visualización de correlación entre valores faltantes:")
+na_matrix <- geih_raw %>% is.na() %>% cor(use = "pairwise.complete.obs")
+png("views/figures/missing_corr.png", width = 800, height = 600)
+corrplot(na_matrix, method = "color", type = "upper", tl.cex = 0.7, na.label = " ")
+dev.off()
+
+# =========================================================================
+# 2. Filtrar individuos empleados mayores de 18 años
+# =========================================================================
 geih_clean <- geih_raw %>%
-  janitor::clean_names() %>%
-  rename_with(~ str_replace_all(.x, "p_", ""), starts_with("p_"))
+  filter(age > 18, ocu == 1)
 
-# Verificar nombres de columnas
-print(names(geih_clean))
+message(paste("Después del filtrado por edad y ocupación:", 
+              dim(geih_clean)[1], "filas"))
 
-# Ajustar nombres si 'edad' no está presente correctamente
-edad_col <- "age"
-message(glue::glue("Columna de edad identificada: {edad_col}"))
-
-# Filtrar individuos empleados mayores de 18 años
-geih_filtered <- geih_clean %>%
-  filter(!!sym(edad_col) > 18, ocupados == 1)
-
-# Visualización de valores faltantes
-vis_miss(geih_filtered)
-
-# Matriz de correlación de valores faltantes
-db2 <- geih_filtered %>% mutate_all(~ifelse(!is.na(.), 1, 0))
-db2 <- db2 %>% select(which(apply(db2, 2, sd) > 0))
-M <- cor(db2)
-corrplot(M, method = "circle", type = "lower", tl.cex = 0.7)
-
-# Imputación de valores faltantes usando MICE
-geih_imputed <- mice(geih_filtered, m = 5, method = "pmm", maxit = 5, seed = 123)
-geih_filtered <- complete(geih_imputed)
-
-# Transformaciones de variables
-geih_transformed <- geih_filtered %>%
+# =========================================================================
+# 3. Creación de variables para el análisis
+# =========================================================================
+# Crear variables clave para el análisis
+geih_processed <- geih_clean %>%
   mutate(
-    hourly_wage = inglabo / (horstot * 4.345),
-    log_hourly_wage = log(hourly_wage),
-    sex = factor(sexo, labels = c("Male", "Female")),
-    age_squared = !!sym(edad_col)^2,
-    education_level = factor(case_when(
-      nivel_educativo <= 3 ~ "Primary or less",
-      nivel_educativo == 4 ~ "Secondary",
-      nivel_educativo == 5 ~ "High school",
-      nivel_educativo == 6 ~ "Technical/Technological",
-      nivel_educativo > 6 ~ "University or higher",
-      TRUE ~ NA_character_
-    )),
-    experience = pmax(0, !!sym(edad_col) - nivel_educativo - 6),
-    experience_squared = experience^2,
-    formal = if_else(cotpen == 1, 1, 0),
-    married = if_else(est_civil %in% c(2, 3), 1, 0)
+    # Variable dependiente: salario por hora
+    hourly_wage = y_ingLab_m / (totalHoursWorked * 4.345),
+    
+    # Variable para brecha de género
+    female = ifelse(sex == 0, 1, 0),
+    
+    # Variables para análisis de perfil edad-salario
+    age_squared = age^2,
+    
+    # Variable para categoría educativa
+    educ_level = factor(maxEducLevel),
+    
+    # Variable para formalidad laboral
+    formal_work = formal,
+    
+    # Log de salario
+    log_hourly_wage = log(hourly_wage)
+  ) %>%
+  # Filtrar solo valores positivos de salario y horas trabajadas
+  filter(!is.na(hourly_wage), hourly_wage > 0, totalHoursWorked > 0)
+
+message(paste("Después de la creación de variables:", 
+              dim(geih_processed)[1], "filas"))
+
+# =========================================================================
+# 4. Detección y manejo de outliers en salarios
+# =========================================================================
+# Calcular Z-score para detectar outliers
+geih_processed <- geih_processed %>%
+  mutate(
+    # Z-score para salario por hora
+    z_score_wage = (hourly_wage - mean(hourly_wage, na.rm = TRUE)) / 
+      sd(hourly_wage, na.rm = TRUE),
+    
+    # Identificar outliers (|z| > 3)
+    is_outlier_wage = abs(z_score_wage) > 3
   )
 
-# Manejo de outliers en salarios usando Z-score
-geih_transformed <- geih_transformed %>%
-  mutate(z_score_wage = (hourly_wage - mean(hourly_wage, na.rm = TRUE)) / sd(hourly_wage, na.rm = TRUE))
+# Número de outliers identificados
+n_outliers <- sum(geih_processed$is_outlier_wage, na.rm = TRUE)
+message(paste("Número de outliers identificados en salarios:", n_outliers))
 
-gheih_final <- geih_transformed %>%
-  filter(abs(z_score_wage) < 3)
+# Dataset sin outliers
+geih_filtered <- geih_processed %>%
+  filter(!is_outlier_wage)
 
-# Guardar datos procesados
-saveRDS(geih_final, file.path(processed_data_dir, "geih_2018_clean.rds"))
-write_csv(geih_final, file.path(processed_data_dir, "geih_2018_clean.csv"))
+message(paste("Después de filtrar outliers:", dim(geih_filtered)[1], "filas"))
 
-message(glue::glue("Datos procesados guardados en {processed_data_dir}"))
+# =========================================================================
+# 5. Estadísticas descriptivas
+# =========================================================================
+# Verificar y limpiar valores NA antes de generar la tabla de estadísticas descriptivas
+geih_filtered_clean <- geih_filtered %>% 
+  select(hourly_wage, log_hourly_wage, age, female) %>%
+  drop_na()
 
-# FIN DEL SCRIPT
+if (nrow(geih_filtered_clean) > 0) {
+  stargazer(
+    geih_filtered_clean,
+    type = "latex",
+    title = "Estadísticas Descriptivas",
+    digits = 2,
+    out = "views/tables/descriptive_stats.tex",
+    label = "tab:descriptives",
+    summary.stat = c("n", "mean", "sd", "min", "p25", "median", "p75", "max")
+  )
+} else {
+  message("Advertencia: No hay datos suficientes para generar estadísticas descriptivas.")
+}
+
+# =========================================================================
+# 6. Guardar datos procesados
+# =========================================================================
+# Guardar dataset procesado para análisis posteriores
+saveRDS(geih_filtered, "stores/processed/geih_2018_clean.rds")
+
+message("Limpieza de datos completada exitosamente.")
