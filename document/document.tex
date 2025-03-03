@@ -70,7 +70,6 @@
 
 \author{%
 \begin{center}
-
 Harold Stiven Acuña\\
 José David Cuervo\\
 José David Dávila\\
@@ -117,73 +116,55 @@ César Augusto Alfaro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Introducción}
+En el sector público, la precisión en la declaración de ingresos individuales es fundamental para el cálculo de impuestos. Sin embargo, el fraude fiscal de todos los tipos ha sido siempre un problema importante. Según el Servicio de Impuestos Internos (IRS), aproximadamente el 83,6\% de los impuestos en Estados Unidos se pagan voluntaria y puntualmente. Una de las causas de esta brecha es la subdeclaración de ingresos por parte de los individuos. Un modelo de predicción de ingresos podría potencialmente ayudar a identificar casos de fraude que podrían llevar a la reducción de esta brecha. Además, puede ayudar a identificar a individuos y familias vulnerables que necesitan asistencia adicional.
 
-En el sector público, la precisión en el reporte de ingresos individuales es fundamental para el cálculo adecuado de impuestos. Sin embargo, el fraude fiscal es un problema por resolver para los sistemas tributarios en todo el mundo. De acuerdo con el Servicio de Impuestos Internos (IRS) de Estados Unidos, aproximadamente el 83.6\% de los impuestos son pagados voluntariamente y a tiempo en ese país, lo que evidencia la existencia de una brecha tributaria considerable. Una de las principales causas de esta brecha es la subdeclaración de ingresos por parte de los contribuyentes.
+El análisis del mercado laboral es fundamental para comprender la distribución de los ingresos y la dinámica de las desigualdades económicas. En este contexto, predecir el salario por hora de los trabajadores es una tarea clave para evaluar el impacto de diferentes factores individuales y estructurales en los ingresos laborales.
 
+En Colombia, el Departamento Administrativo Nacional de Estadística (DANE) ha desarrollado metodologías para la medición de pobreza monetaria y desigualdad, utilizando información de la Gran Encuesta Integrada de Hogares (GEIH). Estos esfuerzos proporcionan una base sólida para la construcción de modelos predictivos de ingresos. La Misión para el Empalme de las Series de Empleo, Pobreza y Desigualdad (MESEP) ha realizado un trabajo significativo en la actualización y mejora de las metodologías de medición.
 
-El desarrollo de modelos predictivos de ingresos puede ser una herramienta valiosa para abordar este problema desde dos perspectivas complementarias. Por un lado, estos modelos pueden ayudar a identificar posibles casos de fraude fiscal al detectar discrepancias significativas entre los ingresos reportados y los estimados según las características sociodemográficas y laborales de los individuos. Por otro lado, pueden contribuir a la identificación de personas y familias en situación de vulnerabilidad que podrían requerir asistencia adicional por parte del Estado.
-
-
-En Colombia, el Departamento Administrativo Nacional de Estadística (DANE) ha desarrollado metodologías para la medición de pobreza monetaria y desigualdad, utilizando información de la Gran Encuesta Integrada de Hogares (GEIH). Estos esfuerzos proporcionan una base sólida para la construcción de modelos predictivos de ingresos. La Misión para el Empalme de las Series de Empleo, Pobreza y Desigualdad (MESEP) ha realizado un trabajo significativo en la actualización y mejora de las metodologías de medición, considerando tanto el método indirecto de estimación de ingresos como el enfoque del costo de necesidades básicas.
-
+El objetivo principal de este estudio es construir un modelo de predicción del salario horario individual: $w = f(X) + u$, donde $w$ es el salario horario y $X$ es una matriz de variables explicativas o predictores. En este trabajo, nos enfocaremos en la forma funcional $f(X) = X\beta$.
 
 En este contexto, el presente estudio se propone construir un modelo predictivo de ingresos utilizando datos de la GEIH 2018 para Bogotá, con el objetivo de explorar las relaciones entre características individuales y niveles de ingreso, así como evaluar la capacidad predictiva de diferentes especificaciones estadísticas. La investigación se centra particularmente en el análisis del perfil edad-salario y la brecha salarial de género, temas de gran relevancia tanto para la política fiscal como para las políticas de equidad e inclusión social.
 
-
-Utilizaremos técnicas de web scraping para extraer la información de la muestra de la GEIH 2018 disponible en la página web https://ignaciomsarmiento.github.io/GEIH2018\_sample/, limpiaremos los datos y desarrollaremos diversos modelos estadísticos para identificar los determinantes del ingreso individual y evaluar su capacidad predictiva.
-
+Para abordar este problema, se emplean datos de la GEIH 2018, que proporciona información detallada sobre la situación laboral, ingresos, educación y características sociodemográficas de los individuos. La base de datos incluye 178 variables y más de 32,000 observaciones. Dado que contiene información detallada sobre el nivel educativo, horas trabajadas, informalidad, estrato socioeconómico y otras variables clave, se considera adecuada para responder a la pregunta de investigación sobre los determinantes del ingreso laboral.
 
 \section{Datos}
 En esta sección se presenta el proceso de obtención, limpieza y análisis descriptivo de los datos utilizados para modelar los salarios individuales en Bogotá.
-
 
 \subsection{Descripción de los datos}
 % (a) Describe the data briefly, including its purpose, and any other relevant information.
 
 Los datos utilizados en este análisis provienen de la Gran Encuesta Integrada de Hogares (GEIH) de 2018, específicamente para la ciudad de Bogotá. La GEIH es una encuesta de carácter continuo realizada por el Departamento Administrativo Nacional de Estadística (DANE) con el propósito de proporcionar información básica sobre el tamaño y estructura de la fuerza de trabajo del país, así como las características sociodemográficas de la población colombiana.
 
-
 El conjunto de datos original contiene información de 32,177 individuos y 178 variables que abarcan aspectos demográficos, educativos, laborales y económicos. Esta riqueza de información permite un análisis detallado de los determinantes del ingreso laboral en la capital colombiana y facilita la construcción de modelos predictivos robustos que puedan contribuir a la identificación tanto de posibles casos de subdeclaración de ingresos como de hogares en situación de vulnerabilidad.
 
-
 La GEIH resulta particularmente adecuada para los objetivos de este estudio debido a su diseño metodológico riguroso y a la amplitud de las variables recolectadas. Por un lado, la encuesta captura información detallada sobre los diversos componentes del ingreso laboral (salarios, bonificaciones, horas extras, etc.), lo que permite una caracterización precisa de nuestra variable dependiente. Por otro lado, incluye un amplio conjunto de características individuales y laborales que la literatura económica ha identificado como determinantes clave de los ingresos, facilitando la especificación de modelos con alto poder explicativo.
-
 
 \subsection{Proceso de adquisición de datos}
 % (b) Describe the process of acquiring the data and if there are any restrictions to accessing/scraping these data.
 
 Los datos analizados en este estudio provienen de la Gran Encuesta Integrada de Hogares (GEIH) de 2018, específicamente para la ciudad de Bogotá. La GEIH es una encuesta que realiza el Departamento Administrativo Nacional de Estadística (DANE) de Colombia con el propósito de proporcionar información básica sobre el tamaño y estructura de la fuerza de trabajo del país (empleo, desempleo e inactividad), así como de las características sociodemográficas de la población.
 
-
 Para la adquisición de los datos, desarrollamos un algoritmo automatizado que identifica y extrae las tablas contenidas en cada una de las diez páginas HTML disponibles en el sitio \url{https://ignaciomsarmiento.github.io/GEIH2018_sample/}. El proceso consistió en realizar solicitudes HTTP a cada URL, procesar el contenido HTML recibido y extraer las estructuras tabulares utilizando las bibliotecas \texttt{httr} y \texttt{rvest} en R.
-
 
 Una consideración importante durante la extracción fue la necesidad de respetar las políticas del sitio web, incluyendo pausas entre solicitudes para evitar sobrecargar el servidor. No se identificaron restricciones explícitas para el acceso a estos datos, ya que se encuentran disponibles públicamente con fines académicos. Sin embargo, aplicamos prácticas éticas de web scraping, limitando la frecuencia de solicitudes y utilizando únicamente los datos necesarios para nuestro análisis.
 
-
 El conjunto de datos original contiene información de 32,177 individuos y 178 variables que abarcan aspectos demográficos, educativos, laborales y económicos. Esta amplia gama de variables permite un análisis detallado de los determinantes del ingreso y facilita la construcción de modelos predictivos robustos. Las variables incluyen datos sobre edad, sexo, nivel educativo, estado laboral, horas trabajadas, tipo de ocupación, tamaño de la empresa, y diversos componentes del ingreso laboral.
-
 
 El código desarrollado para esta tarea se encuentra disponible en nuestro repositorio de GitHub, permitiendo la reproducibilidad completa del proceso de adquisición de datos.
 
-
 La GEIH es particularmente adecuada para abordar el problema planteado en este estudio por varias razones. Primero, contiene mediciones detalladas de ingresos laborales desagregados por fuente (salario base, horas extras, bonificaciones, etc.), lo que permite una caracterización precisa de la variable dependiente. Segundo, incluye un amplio conjunto de características individuales y laborales que la literatura ha identificado como determinantes clave de los ingresos. Tercero, su diseño muestral garantiza representatividad para la ciudad de Bogotá, permitiendo generalizaciones válidas para la población urbana de la capital colombiana.
-
 
 \subsection{Proceso de limpieza de datos}
 % (c) Describe the data cleaning process
 
 El proceso de limpieza de datos comprendió varias etapas orientadas a obtener una muestra analítica adecuada para la modelación de ingresos laborales. Partimos de los datos crudos obtenidos mediante web scraping, que constaban de 32,177 observaciones y 178 variables.
 
-
 En primer lugar, realizamos una exploración exhaustiva de los valores faltantes en el conjunto de datos. El análisis reveló un patrón estructural en los datos ausentes, donde aproximadamente el 60\% de los datos están ausentes. Este patrón es esperado en encuestas de hogares como la GEIH, ya que muchas preguntas son aplicables solo a subgrupos específicos de la población (por ejemplo, las preguntas sobre características laborales solo aplican a personas empleadas).
-
 
 La exploración de correlación entre valores faltantes nos permitió identificar grupos de variables que sistemáticamente presentan datos ausentes para los mismos individuos. Este análisis fue crucial para comprender la estructura de los datos y desarrollar una estrategia adecuada de manejo de valores faltantes.
 
-
 Siguiendo los criterios establecidos en las instrucciones del problema, filtramos la muestra para incluir únicamente a individuos mayores de 18 años y que estuvieran empleados al momento de la encuesta. Esta restricción redujo la muestra a aproximadamente 16,682 observaciones, que representan adecuadamente a la población objetivo de nuestro estudio: la fuerza laboral adulta de Bogotá.
-
 
 Posteriormente, creamos las variables clave para nuestro análisis:
 
@@ -194,12 +175,9 @@ Posteriormente, creamos las variables clave para nuestro análisis:
     \item \textbf{Logaritmo del salario por hora (log\_hourly\_wage)}: Transformación que permite normalizar la distribución de los salarios y facilita la interpretación de los coeficientes como elasticidades o cambios porcentuales.
 \end{enumerate}
 
-
 Para garantizar la calidad de los datos, implementamos un proceso de detección y manejo de valores atípicos (outliers) en los salarios. Calculamos los z-scores para la variable de salario por hora y excluimos las observaciones con valores absolutos superiores a 3, lo que corresponde a salarios que se desvían más de tres desviaciones estándar de la media. Este filtro nos permitió eliminar casos extremos que podrían distorsionar los resultados del análisis, manteniendo al mismo tiempo una muestra representativa.
 
-
 Finalmente, eliminamos las observaciones con valores faltantes en las variables clave para el análisis, asegurando así que el conjunto de datos final estuviera listo para la modelación estadística. El conjunto de datos limpio y procesado fue almacenado en formato RDS para su uso en las etapas posteriores del análisis.
-
 
 La siguiente tabla resume el tamaño de la muestra después de cada etapa del proceso de limpieza, destacando la proporción de observaciones que se conservaron en cada paso:
 
@@ -223,12 +201,10 @@ La siguiente tabla resume el tamaño de la muestra después de cada etapa del pr
     \end{flushleft}
 \end{table}
 
-
 \subsection{Variables incluidas en el análisis}
 % (d) Descriptive the variables included in your analysis.
 
 Las variables seleccionadas para nuestro análisis fueron cuidadosamente elegidas con base en la literatura económica sobre determinantes de ingresos y considerando su relevancia para los objetivos específicos del estudio. A continuación, presentamos las principales variables incluidas:
-
 
 \subsubsection{Variable dependiente}
 
@@ -262,27 +238,47 @@ Las variables seleccionadas para nuestro análisis fueron cuidadosamente elegida
 
 Observamos que la edad promedio de los trabajadores en la muestra es de aproximadamente 34.4 años, con una desviación estándar considerable de 20.9 años, lo que indica una fuerza laboral diversa en términos etarios. La proporción de mujeres en la muestra es del 47.9\%, lo que refleja una participación laboral femenina ligeramente inferior a la masculina en Bogotá.
 
-
 Respecto a las variables laborales, el promedio de horas trabajadas semanales es de aproximadamente 47.2 horas, superior a la jornada laboral estándar de 40 horas, lo que sugiere una prevalencia de horas extras o empleos con jornadas extendidas. La tasa de formalidad laboral es del 58.2\%, indicando que más de la mitad de los trabajadores en la muestra tienen empleos formales.
-
 
 Un hallazgo notable es la variabilidad en los ingresos laborales. El salario por hora presenta una distribución altamente heterogénea, con un coeficiente de variación elevado, lo que justifica tanto nuestra transformación logarítmica como nuestro enfoque en la modelación de los determinantes de esta variable.
 
-
 Es importante destacar que, tras el proceso de limpieza y filtrado descrito en la sección anterior, nuestra muestra analítica final conserva la representatividad de la población ocupada de Bogotá mayor de 18 años, permitiendo inferencias válidas sobre los patrones salariales en esta población.
 
-
 \section{Perfil Edad-Salario}
-[Análisis del perfil edad-salario]
 
+Los resultados de la regresión de $\log(w) = \beta_1 + \beta_2 * Age + \beta_3 * Age^2 + u$, permiten interpretar que la constante de 13.060 será el valor esperado del logaritmo del ingreso, mientras que, al analizar la parte lineal de esta regresión, es decir, el componente Age, este es estadísticamente significativo y denota que, ante aumentos marginales de la edad, el salario incrementará en un 3.8\% cuando los efectos no lineales son mínimos. Ahora bien, respecto del componente cuadrático de la ecuación, se observa que el coeficiente es negativo y significativo, lo cual indica que la función es cóncava y, en ese sentido, que los ingresos crecerán hasta llegar a un punto de inflexión, para luego decrecer.
+
+Para hallar ese punto de inflexión, se calcula la siguiente derivada para la ecuación:
+
+$$\frac{d(log(w))}{dAge} = \beta_1\ + \beta_2\ * Age + \beta_3\ * Age^2 + u$$
+
+Lo que resulta en:
+
+$$\frac{d(log(w))}{dAge} = \beta_2\ + 2\beta_3\ *Age$$
+
+Igualando a cero:
+$$ \beta_2\ + 2\beta_3\ * Age=0$$
+
+Encontramos el punto de inflexión que será:
+
+$$Age_{max}= -\frac{\beta_2}{2\beta_3}$$
+Por lo que:
+
+$$Age_{max}= - \frac{0.038}{2(-0.0004)} = 47.5$$
+
+Como resultado de reemplazar los coeficientes beta obtenidos en la regresión, se encuentra que los ingresos aumentan hasta la edad aproximada de 48 años y luego disminuyen. Es decir, 48 años es la edad donde el individuo alcanza su salario máximo.
+
+Al respecto, Becker (1964) en el capítulo de su libro, denominado Age, Earnings, Wealth, and Human Capital, perfila la relación entre la edad y salario, y allí logra evidenciar que los ingresos tienden a ser relativamente bajos en los primeros años laborales; luego se incrementan gradualmente, en virtud del desarrollo de habilidades y la experiencia adquirida, hasta llegar a una edad pico, en el intervalo de 45 a 54 años, donde los individuos alcanzan su máximo salario. En ese sentido, el resultado de los coeficientes obtenidos en la regresión es apropiado y encuentra sustento en lo señalado por Becker (1964), tal y como se indicó.
+
+En cuanto al ajuste del modelo, se observa que este posee un $R^2$ de 0.022, lo cual indica que el modelo solo es explicado en una pequeña proporción y ello sugiere que, en efecto, la edad es un valor determinante a la hora de estimar los ingresos. Sin embargo, se evidencia la necesidad de incluir más factores que afectan la estimación del salario, que pueden ser variables observables y no observables, tales como educación, experiencia, habilidades, entre otras. Es decir, para realizar un modelo que explique el nivel de salario, además de la edad, resulta necesario incluir otras variables que permitan obtener un resultado más acertado.
+
+Finalmente, se realizó un test para medir la heterocedasticidad, del cual se obtuvo un p-valor menor a 0.05 y este indica la existencia de heterocedasticidad, frente a lo cual, entonces, se evidencia la necesidad de utilizar otra metodología para abordar el problema en la estimación del salario.
 
 \section{Brecha Salarial de Género}
 [Análisis de la brecha salarial]
 
-
 \section{Predicción de Ingresos}
 [Modelos predictivos y validación]
-
 
 \section{Conclusiones}
 [Conclusiones principales]
