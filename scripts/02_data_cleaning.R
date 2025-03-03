@@ -72,10 +72,10 @@ geih_processed <- geih_clean %>%
     age_squared = age^2,
     
     # Variable para categoría educativa
-    educ_level = factor(maxEducLevel),
+    educ_level = as.numeric(factor(maxEducLevel)),
     
     # Variable para formalidad laboral
-    formal_work = formal,
+    formal_work = as.numeric(formal),
     
     # Log de salario
     log_hourly_wage = log(hourly_wage)
@@ -113,10 +113,13 @@ message(paste("Después de filtrar outliers:", dim(geih_filtered)[1], "filas"))
 # =========================================================================
 # 5. Estadísticas descriptivas
 # =========================================================================
-# Verificar y limpiar valores NA antes de generar la tabla de estadísticas descriptivas
+# Seleccionar variables clave para la tabla
 geih_filtered_clean <- geih_filtered %>% 
-  select(hourly_wage, log_hourly_wage, age, female) %>%
-  drop_na()
+  mutate(
+    formal_work = ifelse(is.na(formal_work), 0, formal_work),
+    educ_level = ifelse(is.na(educ_level), 1, educ_level)
+  ) %>%
+  select(hourly_wage, log_hourly_wage, age, female, totalHoursWorked, formal_work, educ_level)
 
 if (nrow(geih_filtered_clean) > 0) {
   stargazer(
