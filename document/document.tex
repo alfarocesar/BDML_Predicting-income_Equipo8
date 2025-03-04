@@ -275,7 +275,188 @@ En cuanto al ajuste del modelo, se observa que este posee un $R^2$ de 0.022, lo 
 Finalmente, se realizó un test para medir la heterocedasticidad, del cual se obtuvo un p-valor menor a 0.05 y este indica la existencia de heterocedasticidad, frente a lo cual, entonces, se evidencia la necesidad de utilizar otra metodología para abordar el problema en la estimación del salario.
 
 \section{Brecha Salarial de Género}
-[Análisis de la brecha salarial]
+% [Análisis de la brecha salarial]
+
+\subsection{Identificación de la Variable Dependiente}
+
+Este análisis corresponde a un modelo de regresión en el que la variable dependiente es el \textbf{logaritmo del salario} (log\_salario).
+
+\subsection{Interpretación de los Coeficientes}
+
+\textbf{modelo\_lm $<-$ lm(log\_salario $\sim$ age + I(age$^2$) + sex + p6100 + fex\_c + p6426 + relab, data = train\_data)}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Resultados de la regresión del modelo de brecha salarial}
+    \label{tab:wage_gap_model}
+    \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Variables} & \textbf{Coeficiente} & \textbf{Error estándar} & \textbf{Valor t} & \textbf{Pr($>$|t|)} \\
+    \midrule
+    (Intercept) & 12.915 & 0.079 & 163.51 & $<$ 2e-16 *** \\
+    age & 0.077 & 0.004 & 19.83 & $<$ 2e-16 *** \\
+    I(age$^2$) & -0.001 & 0.000 & -19.81 & $<$ 2e-16 *** \\
+    sex & 0.131 & 0.014 & 9.02 & $<$ 2e-16 *** \\
+    p6100 & -0.023 & 0.019 & -1.24 & 0.217 \\
+    fex\_c & -0.000 & 0.000 & -0.29 & 0.773 \\
+    p6426 & 0.003 & 0.000 & 22.92 & $<$ 2e-16 *** \\
+    relab & -0.098 & 0.017 & -5.78 & 8.6e-09 *** \\
+    \bottomrule
+    \multicolumn{5}{l}{\tiny{Códigos de significancia: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1}}
+    \end{tabular}
+\end{table}
+
+Cada coeficiente refleja el \textbf{impacto de la variable independiente en el logaritmo del salario}, manteniendo constantes las demás variables.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Interpretación de los coeficientes del modelo}
+    \label{tab:coef_interpretation}
+    \begin{tabular}{lp{10cm}}
+    \toprule
+    \textbf{Variables} & \textbf{Interpretaciones} \\
+    \midrule
+    \textbf{Intercepto ((Intercept))} & - Tiene un valor alto y significativo, indicando el punto de referencia cuando todas las variables explicativas son cero.\\
+     & - Su intervalo de confianza es el más amplio, lo cual es común en modelos con escalas transformadas.\\
+    \midrule
+    \textbf{Edad (age)} & - Su coeficiente es positivo, lo que indica que el salario tiende a aumentar con la edad.\\
+     & - Su intervalo de confianza es estrecho, sugiriendo que la estimación es precisa y significativa.\\
+    \midrule
+    \textbf{Edad al cuadrado (I(age$^2$))} & - Su coeficiente es negativo, lo que confirma que la relación entre edad y salario no es lineal, sino cuadrática.\\
+     & - Indica que el salario crece con la edad, pero a un ritmo decreciente.\\
+    \midrule
+    \textbf{Sexo (sex)} & - Su coeficiente es positivo y significativo.\\
+     & - Esto sugiere que hay una diferencia salarial entre géneros, donde los hombres (referencia) tienen un salario mayor en promedio en comparación con las mujeres.\\
+    \midrule
+    \textbf{Factor de expansión (fex\_c)} & - Su coeficiente es cercano a cero y su intervalo de confianza es amplio.\\
+     & - Esto sugiere que el factor de expansión no tiene un impacto significativo en el salario.\\
+    \midrule
+    \textbf{p6100 (Nivel de educación)} & - Su coeficiente es negativo, lo que indica que esta variable reduce el salario.\\
+     & - Tiene un intervalo de confianza estrecho, lo que sugiere alta precisión.\\
+    \midrule
+    \textbf{p6426 (Tiempo en el trabajo actual)} & - Su coeficiente es positivo, indicando un impacto positivo en el salario.\\
+     & - Su intervalo de confianza es estrecho, indicando alta precisión.\\
+    \midrule
+    \textbf{Relación laboral (relab)} & - Su coeficiente es negativo, sugiriendo que ciertos tipos de relación laboral pueden estar asociados con menores salarios.\\
+     & - Tiene un intervalo de confianza estrecho, indicando que la estimación es robusta.\\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Evaluación de la Significancia Estadística}
+
+\begin{itemize}
+    \item \textbf{Variables significativas:} age, I(age$^2$), sex, p6100, p6426, relab.
+\end{itemize}
+
+\subsection{Conclusiones sobre la Brecha Salarial}
+
+\begin{enumerate}
+    \item \textbf{El salario tiene una relación cuadrática con la edad}, es decir, aumenta con la edad, pero a un ritmo decreciente.
+
+    \item \textbf{El género influye en el salario}, con los hombres ganando más que las mujeres, lo que sugiere la presencia de una brecha salarial de género.
+
+    \item \textbf{La variable p6100 (Nivel de educación):} tiene un impacto negativo en el salario, mientras que p6426 (tiempo en el trabajo actual) tiene un impacto positivo.
+
+    \item \textbf{La relación laboral (relab) también impacta negativamente en el salario}, lo que podría estar relacionado con el tipo de contrato o estabilidad del empleo.
+
+    \item \textbf{El factor de expansión (fex\_c) no parece tener un efecto significativo}, por lo que podría eliminarse del modelo sin afectar su interpretación.
+\end{enumerate}
+
+\subsection{Análisis de Resultados de los Modelos}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Comparativa de desempeño de modelos}
+    \label{tab:model_performance}
+    \begin{tabular}{lc}
+    \toprule
+    \textbf{Modelo} & \textbf{RMSE} \\
+    \midrule
+    Regresión Lineal & 0.6610 \\
+    Ridge & 0.6689 \\
+    Lasso & 0.6609 \\
+    Árbol de Decisión & 0.6405 \\
+    Random Forest & 0.6172 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{itemize}
+    \item \textbf{El modelo con mejor desempeño es el Random Forest} (RMSE = \textbf{0.6172}), lo que sugiere que captura mejor las relaciones en los datos.
+
+    \item \textbf{Los árboles de decisión también tienen un buen rendimiento} (RMSE = \textbf{0.6405}), superando a la regresión lineal y regularizada (Ridge y Lasso).
+
+    \item \textbf{La regresión Ridge tiene el peor RMSE} (0.6689), lo que indica que no aporta una mejora significativa en comparación con la regresión lineal estándar.
+
+    \item \textbf{La regresión Lasso es casi idéntica a la regresión lineal} (0.6609 vs. 0.6610), lo que sugiere que la penalización no está eliminando muchas variables o que las seleccionadas son las más relevantes.
+\end{itemize}
+
+\subsection{Interpretación de los Resultados del Bootstrap}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Resultados del análisis bootstrap}
+    \label{tab:bootstrap_results}
+    \begin{tabular}{lccc}
+    \toprule
+    \textbf{Parámetro (t*)} & \textbf{Valor original} & \textbf{Sesgo (Bias)} & \textbf{Error estándar} \\
+    \midrule
+    t1* & 129.156 & -0.0005547 & 0.07899 \\
+    t2* & 0.07746 & 0.002186 & 0.00390 \\
+    t3* & -0.0009846 & -7.18e-08 & 0.0000498 \\
+    t4* & 0.1309 & 0.00908 & 0.01449 \\
+    t5* & -0.02287 & -0.000236 & 0.01850 \\
+    t6* & -3.53e-06 & 1.40e-06 & 0.0000121 \\
+    t7* & 0.00298 & -1.58e-06 & 0.0001300 \\
+    t8* & -0.09775 & -2.48e-05 & 0.01686 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{itemize}
+    \item \textbf{El primer coeficiente (t1*)} tiene un valor alto (12.9156), pero con un error estándar relativamente pequeño (0.07899), lo que sugiere que es un estimador confiable.
+
+    \item El sesgo en general es bajo, lo que indica que los coeficientes no están sobreajustados y se mantienen estables en diferentes muestras.
+
+    \item \textbf{El coeficiente t8*} (-0.09775) tiene un error estándar algo alto (0.01686), lo que sugiere que su estimación podría ser menos precisa.
+
+    \item \textbf{Los coeficientes más pequeños (t6* y t7*)} tienen errores estándar muy bajos, lo que indica que su variabilidad es mínima y su estimación es confiable.
+\end{itemize}
+
+El bootstrap confirma que la mayoría de los coeficientes son \textbf{estables y con bajo sesgo}. Sin embargo, algunas variables pueden tener menor precisión en su estimación (como t8*).
+
+\subsection{Interpretación del Intervalo de Confianza (IC)}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Intervalos de confianza para los coeficientes}
+    \label{tab:confidence_intervals}
+    \begin{tabular}{lcc}
+    \toprule
+    \textbf{Variables} & \textbf{Lower} & \textbf{Upper} \\
+    \midrule
+    (Intercept) & 127.621098540 & 130.685510906 \\
+    age & 0.0699493513 & 0.0851710103 \\
+    I(age$^2$) & -0.0010824361 & -0.0008892900 \\
+    sex & 0.1017960768 & 0.1587800722 \\
+    p6100 & -0.3166915835 & -0.2440927380 \\
+    fex\_c & -0.0002464454 & 0.0002437665 \\
+    p6426 & 0.0027246483 & 0.0032378946 \\
+    relab & -0.1308652327 & -0.0644208559 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{itemize}
+    \item \textbf{Variables con efecto significativo:} age, I(age$^2$), sex, p6100, p6426, y relab, ya que sus intervalos de confianza no incluyen el cero.
+
+    \item \textbf{Variable no significativa:} fex\_c, porque su intervalo sí incluye el cero, lo que sugiere que su impacto en el salario no es concluyente.
+
+    \item Se confirma la relación cuadrática de la edad con el salario.
+
+    \item El género (sex) influye de manera positiva en el salario, lo que podría indicar una brecha salarial de género.
+\end{itemize}
 
 \section{Predicción de Ingresos}
 [Modelos predictivos y validación]
