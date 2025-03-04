@@ -1,6 +1,6 @@
 #---
 # title: "Punto 5"
-# author: "Jose_D_Cuervo
+# author: "Jose_D_Cuervo"
 # date: "2025-03-04"
 # output: html_document
 # ---
@@ -9,9 +9,15 @@
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-### PUNTO DESARROLAR
+### PUNTO DESARROLLAR
 
 ```{r}
+# Cargar librerías necesarias
+library(caret)
+library(randomForest)
+library(nnet)
+library(boot)
+
 # Fijar semilla para reproducibilidad
 set.seed(10101)
 
@@ -36,7 +42,8 @@ models$lm3 <- lm(log_hourly_wage ~ age * educ_level + female * formal_work, data
 models$rf <- randomForest(log_hourly_wage ~ age + I(age^2) + female + totalHoursWorked + formal_work + educ_level, data = train_data)
 
 # Modelo 5: Red Neuronal (nnet)
-models$nn <- nnet(log_hourly_wage ~ age + I(age^2) + female + totalHoursWorked + formal_work + educ_level, data = train_data, size = 5, linout = TRUE)
+models$nn <- nnet(log_hourly_wage ~ age + I(age^2) + female + totalHoursWorked + formal_work + educ_level, 
+                  data = train_data, size = 5, linout = TRUE, maxit = 500)
 
 # Evaluar modelos en conjunto de prueba
 rmse_results <- sapply(models, function(model) {
@@ -75,6 +82,3 @@ print(rmse_results)
 print(best_model)
 print(comparison)
 print(high_error_obs)
-
-```
-
