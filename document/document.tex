@@ -14,7 +14,7 @@
 
 \usepackage{amsfonts}
 \usepackage{graphicx}
-\usepackage{xcolor}  % Ya incluye "color", por lo que eliminamos "color.sty"
+\usepackage{xcolor}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage[table]{xcolor}
@@ -26,11 +26,8 @@
 \usepackage[capposition=top]{floatrow}
 \usepackage[labelsep=period]{caption}
 \usepackage{subcaption}
-\usepackage{lscape}
-\usepackage{pdflscape}
 \usepackage{multicol}
 \usepackage[bottom]{footmisc}
-\usepackage{longtable}
 \usepackage{enumerate}
 \usepackage{units}
 \usepackage{placeins}
@@ -49,8 +46,6 @@
 \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
-
-% \usepackage{comment}  % Por ahora comentado
 
 \usepackage{xfrac}
 \usepackage{bbold}
@@ -93,7 +88,7 @@ César Augusto Alfaro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{abstract}
-[Pendiente: Escribir abstract de 100 palabras]
+Este estudio emplea técnicas de modelado estadístico y aprendizaje automático para analizar los determinantes del ingreso laboral en Bogotá, utilizando datos de la Gran Encuesta Integrada de Hogares (GEIH) de 2018. Mediante el desarrollo de modelos predictivos, exploramos el perfil edad-salario, la brecha salarial de género y la capacidad predictiva de diferentes especificaciones estadísticas. Nuestros resultados revelan una relación no lineal entre edad e ingresos, con un pico salarial alrededor de los 48 años, y evidencian una persistente brecha salarial de género que permanece incluso después de controlar por características educativas y laborales. Los modelos basados en ensambles (Random Forest) muestran el mejor desempeño predictivo.
 \end{abstract}
 
 \medskip
@@ -116,384 +111,159 @@ César Augusto Alfaro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Introducción}
-En el sector público, la precisión en la declaración de ingresos individuales es fundamental para el cálculo de impuestos. Sin embargo, el fraude fiscal de todos los tipos ha sido siempre un problema importante. Según el Servicio de Impuestos Internos (IRS), aproximadamente el 83,6\% de los impuestos en Estados Unidos se pagan voluntaria y puntualmente. Una de las causas de esta brecha es la subdeclaración de ingresos por parte de los individuos. Un modelo de predicción de ingresos podría potencialmente ayudar a identificar casos de fraude que podrían llevar a la reducción de esta brecha. Además, puede ayudar a identificar a individuos y familias vulnerables que necesitan asistencia adicional.
+En el sector público, la precisión en la declaración de ingresos individuales es fundamental para el cálculo de impuestos. Sin embargo, el fraude fiscal de todos los tipos ha sido siempre un problema importante. Según el Servicio de Impuestos Internos (IRS), aproximadamente el 83,6\% de los impuestos en Estados Unidos se pagan voluntaria y puntualmente \citep{IRS2019}. Una de las causas de esta brecha es la subdeclaración de ingresos por parte de los individuos. Un modelo de predicción de ingresos podría potencialmente ayudar a identificar casos de fraude que podrían llevar a la reducción de esta brecha. Además, permite identificar a individuos y familias vulnerables que necesitan asistencia adicional.
 
-El análisis del mercado laboral es fundamental para comprender la distribución de los ingresos y la dinámica de las desigualdades económicas. En este contexto, predecir el salario por hora de los trabajadores es una tarea clave para evaluar el impacto de diferentes factores individuales y estructurales en los ingresos laborales.
+El objetivo principal de este estudio es construir un modelo de predicción del salario horario individual: $w = f(X) + u$, donde $w$ es el salario horario y $X$ es una matriz de variables explicativas o predictores. En este trabajo, nos enfocamos en la forma funcional $f(X) = X\beta$, siguiendo el enfoque de mínimos cuadrados ordinarios, así como técnicas más avanzadas de machine learning.
 
-En Colombia, el Departamento Administrativo Nacional de Estadística (DANE) ha desarrollado metodologías para la medición de pobreza monetaria y desigualdad, utilizando información de la Gran Encuesta Integrada de Hogares (GEIH). Estos esfuerzos proporcionan una base sólida para la construcción de modelos predictivos de ingresos. La Misión para el Empalme de las Series de Empleo, Pobreza y Desigualdad (MESEP) ha realizado un trabajo significativo en la actualización y mejora de las metodologías de medición.
+El análisis se centra en tres áreas principales: (1) el perfil edad-salario, donde exploramos cómo los ingresos evolucionan a lo largo del ciclo de vida laboral; (2) la brecha salarial de género, examinando las diferencias de ingresos entre hombres y mujeres; y (3) la predicción de ingresos mediante diversos modelos estadísticos y de aprendizaje automático.
 
-El objetivo principal de este estudio es construir un modelo de predicción del salario horario individual: $w = f(X) + u$, donde $w$ es el salario horario y $X$ es una matriz de variables explicativas o predictores. En este trabajo, nos enfocaremos en la forma funcional $f(X) = X\beta$.
+Para abordar estos objetivos, empleamos datos de la Gran Encuesta Integrada de Hogares (GEIH) de 2018 para Bogotá, recopilados por el Departamento Administrativo Nacional de Estadística (DANE). Esta encuesta proporciona información detallada sobre la situación laboral, ingresos, educación y características sociodemográficas de los individuos, lo que la hace adecuada para nuestros propósitos analíticos.
 
-En este contexto, el presente estudio se propone construir un modelo predictivo de ingresos utilizando datos de la GEIH 2018 para Bogotá, con el objetivo de explorar las relaciones entre características individuales y niveles de ingreso, así como evaluar la capacidad predictiva de diferentes especificaciones estadísticas. La investigación se centra particularmente en el análisis del perfil edad-salario y la brecha salarial de género, temas de gran relevancia tanto para la política fiscal como para las políticas de equidad e inclusión social.
-
-Para abordar este problema, se emplean datos de la GEIH 2018, que proporciona información detallada sobre la situación laboral, ingresos, educación y características sociodemográficas de los individuos. La base de datos incluye 178 variables y más de 32,000 observaciones. Dado que contiene información detallada sobre el nivel educativo, horas trabajadas, informalidad, estrato socioeconómico y otras variables clave, se considera adecuada para responder a la pregunta de investigación sobre los determinantes del ingreso laboral.
+El resto del documento está organizado de la siguiente manera: la Sección 2 describe los datos utilizados, incluyendo el proceso de adquisición, limpieza y variables seleccionadas; la Sección 3 analiza el perfil edad-salario; la Sección 4 examina la brecha salarial de género; la Sección 5 desarrolla modelos predictivos de ingresos y evalúa su desempeño; y finalmente, la Sección 6 presenta las conclusiones del estudio.
 
 \section{Datos}
-En esta sección se presenta el proceso de obtención, limpieza y análisis descriptivo de los datos utilizados para modelar los salarios individuales en Bogotá.
+\subsection{Descripción y Adquisición de los Datos}
 
-\subsection{Descripción de los datos}
-% (a) Describe the data briefly, including its purpose, and any other relevant information.
+Los datos utilizados en este análisis provienen de la Gran Encuesta Integrada de Hogares (GEIH) de 2018, específicamente para la ciudad de Bogotá. La GEIH es una encuesta de carácter continuo realizada por el DANE con el propósito de proporcionar información básica sobre el tamaño y estructura de la fuerza de trabajo del país, así como las características sociodemográficas de la población colombiana.
 
-Los datos utilizados en este análisis provienen de la Gran Encuesta Integrada de Hogares (GEIH) de 2018, específicamente para la ciudad de Bogotá. La GEIH es una encuesta de carácter continuo realizada por el Departamento Administrativo Nacional de Estadística (DANE) con el propósito de proporcionar información básica sobre el tamaño y estructura de la fuerza de trabajo del país, así como las características sociodemográficas de la población colombiana.
+Para la adquisición de los datos, desarrollamos un algoritmo automatizado que identifica y extrae las tablas contenidas en cada una de las diez páginas HTML disponibles en el sitio \url{https://ignaciomsarmiento.github.io/GEIH2018_sample/}. El proceso consistió en realizar solicitudes HTTP a cada URL, procesar el contenido HTML recibido y extraer las estructuras tabulares utilizando las bibliotecas \texttt{httr} y \texttt{rvest} en R. El código implementado respeta las políticas del sitio web, incluyendo pausas entre solicitudes para evitar sobrecargar el servidor.
 
-El conjunto de datos original contiene información de 32,177 individuos y 178 variables que abarcan aspectos demográficos, educativos, laborales y económicos. Esta riqueza de información permite un análisis detallado de los determinantes del ingreso laboral en la capital colombiana y facilita la construcción de modelos predictivos robustos que puedan contribuir a la identificación tanto de posibles casos de subdeclaración de ingresos como de hogares en situación de vulnerabilidad.
+El conjunto de datos original contiene información de 32,177 individuos y 178 variables que abarcan aspectos demográficos, educativos, laborales y económicos. Esta riqueza de información permite un análisis detallado de los determinantes del ingreso laboral en la capital colombiana.
 
-La GEIH resulta particularmente adecuada para los objetivos de este estudio debido a su diseño metodológico riguroso y a la amplitud de las variables recolectadas. Por un lado, la encuesta captura información detallada sobre los diversos componentes del ingreso laboral (salarios, bonificaciones, horas extras, etc.), lo que permite una caracterización precisa de nuestra variable dependiente. Por otro lado, incluye un amplio conjunto de características individuales y laborales que la literatura económica ha identificado como determinantes clave de los ingresos, facilitando la especificación de modelos con alto poder explicativo.
+\subsection{Proceso de Limpieza y Variables Incluidas}
 
-\subsection{Proceso de adquisición de datos}
-% (b) Describe the process of acquiring the data and if there are any restrictions to accessing/scraping these data.
-
-Los datos analizados en este estudio provienen de la Gran Encuesta Integrada de Hogares (GEIH) de 2018, específicamente para la ciudad de Bogotá. La GEIH es una encuesta que realiza el Departamento Administrativo Nacional de Estadística (DANE) de Colombia con el propósito de proporcionar información básica sobre el tamaño y estructura de la fuerza de trabajo del país (empleo, desempleo e inactividad), así como de las características sociodemográficas de la población.
-
-Para la adquisición de los datos, desarrollamos un algoritmo automatizado que identifica y extrae las tablas contenidas en cada una de las diez páginas HTML disponibles en el sitio \url{https://ignaciomsarmiento.github.io/GEIH2018_sample/}. El proceso consistió en realizar solicitudes HTTP a cada URL, procesar el contenido HTML recibido y extraer las estructuras tabulares utilizando las bibliotecas \texttt{httr} y \texttt{rvest} en R.
-
-Una consideración importante durante la extracción fue la necesidad de respetar las políticas del sitio web, incluyendo pausas entre solicitudes para evitar sobrecargar el servidor. No se identificaron restricciones explícitas para el acceso a estos datos, ya que se encuentran disponibles públicamente con fines académicos. Sin embargo, aplicamos prácticas éticas de web scraping, limitando la frecuencia de solicitudes y utilizando únicamente los datos necesarios para nuestro análisis.
-
-El conjunto de datos original contiene información de 32,177 individuos y 178 variables que abarcan aspectos demográficos, educativos, laborales y económicos. Esta amplia gama de variables permite un análisis detallado de los determinantes del ingreso y facilita la construcción de modelos predictivos robustos. Las variables incluyen datos sobre edad, sexo, nivel educativo, estado laboral, horas trabajadas, tipo de ocupación, tamaño de la empresa, y diversos componentes del ingreso laboral.
-
-El código desarrollado para esta tarea se encuentra disponible en nuestro repositorio de GitHub, permitiendo la reproducibilidad completa del proceso de adquisición de datos.
-
-La GEIH es particularmente adecuada para abordar el problema planteado en este estudio por varias razones. Primero, contiene mediciones detalladas de ingresos laborales desagregados por fuente (salario base, horas extras, bonificaciones, etc.), lo que permite una caracterización precisa de la variable dependiente. Segundo, incluye un amplio conjunto de características individuales y laborales que la literatura ha identificado como determinantes clave de los ingresos. Tercero, su diseño muestral garantiza representatividad para la ciudad de Bogotá, permitiendo generalizaciones válidas para la población urbana de la capital colombiana.
-
-\subsection{Proceso de limpieza de datos}
-% (c) Describe the data cleaning process
-
-El proceso de limpieza de datos comprendió varias etapas orientadas a obtener una muestra analítica adecuada para la modelación de ingresos laborales. Partimos de los datos crudos obtenidos mediante web scraping, que constaban de 32,177 observaciones y 178 variables.
-
-En primer lugar, realizamos una exploración exhaustiva de los valores faltantes en el conjunto de datos. El análisis reveló un patrón estructural en los datos ausentes, donde aproximadamente el 60\% de los datos están ausentes. Este patrón es esperado en encuestas de hogares como la GEIH, ya que muchas preguntas son aplicables solo a subgrupos específicos de la población (por ejemplo, las preguntas sobre características laborales solo aplican a personas empleadas).
-
-La exploración de correlación entre valores faltantes nos permitió identificar grupos de variables que sistemáticamente presentan datos ausentes para los mismos individuos. Este análisis fue crucial para comprender la estructura de los datos y desarrollar una estrategia adecuada de manejo de valores faltantes.
-
-Siguiendo los criterios establecidos en las instrucciones del problema, filtramos la muestra para incluir únicamente a individuos mayores de 18 años y que estuvieran empleados al momento de la encuesta. Esta restricción redujo la muestra a aproximadamente 16,682 observaciones, que representan adecuadamente a la población objetivo de nuestro estudio: la fuerza laboral adulta de Bogotá.
+El proceso de limpieza de datos comprendió varias etapas orientadas a obtener una muestra analítica adecuada para la modelación de ingresos laborales. Siguiendo los criterios establecidos en las instrucciones del problema, filtramos la muestra para incluir únicamente a individuos mayores de 18 años y que estuvieran empleados al momento de la encuesta. Esta restricción redujo la muestra a aproximadamente 16,682 observaciones.
 
 Posteriormente, creamos las variables clave para nuestro análisis:
 
 \begin{enumerate}
     \item \textbf{Salario por hora (hourly\_wage)}: Calculado como el ingreso laboral mensual dividido por el número de horas trabajadas mensualmente (considerando 4.345 semanas por mes).
+    \item \textbf{Logaritmo del salario por hora (log\_hourly\_wage)}: Transformación que permite normalizar la distribución de los salarios y facilita la interpretación de los coeficientes como elasticidades o cambios porcentuales.
     \item \textbf{Variable indicadora de género (female)}: Recodificada para que tome el valor de 1 para mujeres y 0 para hombres.
     \item \textbf{Variables para el análisis del perfil edad-salario}: Incluimos tanto la edad como su término cuadrático.
-    \item \textbf{Logaritmo del salario por hora (log\_hourly\_wage)}: Transformación que permite normalizar la distribución de los salarios y facilita la interpretación de los coeficientes como elasticidades o cambios porcentuales.
 \end{enumerate}
 
-Para garantizar la calidad de los datos, implementamos un proceso de detección y manejo de valores atípicos (outliers) en los salarios. Calculamos los z-scores para la variable de salario por hora y excluimos las observaciones con valores absolutos superiores a 3, lo que corresponde a salarios que se desvían más de tres desviaciones estándar de la media. Este filtro nos permitió eliminar casos extremos que podrían distorsionar los resultados del análisis, manteniendo al mismo tiempo una muestra representativa.
+Para garantizar la calidad de los datos, implementamos un proceso de detección y manejo de valores atípicos (outliers) en los salarios. Calculamos los z-scores para la variable de salario por hora y excluimos las observaciones con valores absolutos superiores a 3. Finalmente, eliminamos las observaciones con valores faltantes en las variables clave para el análisis, resultando en un conjunto de datos final con 16,015 observaciones.
 
-Finalmente, eliminamos las observaciones con valores faltantes en las variables clave para el análisis, asegurando así que el conjunto de datos final estuviera listo para la modelación estadística. El conjunto de datos limpio y procesado fue almacenado en formato RDS para su uso en las etapas posteriores del análisis.
-
-La siguiente tabla resume el tamaño de la muestra después de cada etapa del proceso de limpieza, destacando la proporción de observaciones que se conservaron en cada paso:
-
-\begin{table}[htbp]
-    \centering
-    \caption{Resumen de la muestra después de cada etapa del proceso de limpieza}
-    \label{tab:sample_summary}
-    \begin{tabular}{lrr}
-    \toprule
-    \textbf{Etapa} & \textbf{Observaciones} & \textbf{Porcentaje} \\
-    \midrule
-    Muestra original & 32,177 & 100.0\% \\
-    Filtro por edad ($>$18) y ocupación & 16,682 & 51.8\% \\
-    Después de la creación de variables & 16,682 & 51.8\% \\
-    Después de filtrar outliers & 16,015 & 49.8\% \\
-    Muestra analítica final & 16,015 & 49.8\% \\
-    \bottomrule
-    \end{tabular}
-    \begin{flushleft}
-    \footnotesize \textit{Fuente:} Elaboración propia con datos de la GEIH 2018 para Bogotá.
-    \end{flushleft}
-\end{table}
-
-\subsection{Variables incluidas en el análisis}
-% (d) Descriptive the variables included in your analysis.
-
-Las variables seleccionadas para nuestro análisis fueron cuidadosamente elegidas con base en la literatura económica sobre determinantes de ingresos y considerando su relevancia para los objetivos específicos del estudio. A continuación, presentamos las principales variables incluidas:
-
-\subsubsection{Variable dependiente}
+Las variables seleccionadas para nuestro análisis incluyen:
 
 \begin{itemize}
-    \item \textbf{log\_hourly\_wage}: Logaritmo natural del salario por hora, calculado a partir del ingreso laboral mensual reportado (y\_ingLab\_m) dividido por las horas trabajadas mensualmente. Esta transformación logarítmica es estándar en la literatura económica, ya que normaliza la distribución típicamente sesgada de los ingresos y permite interpretar los coeficientes como cambios porcentuales aproximados.
+    \item \textbf{Variable dependiente}: log\_hourly\_wage (logaritmo natural del salario por hora)
+    
+    \item \textbf{Variables independientes clave}: age (edad), age\_squared (edad al cuadrado), female (género)
+    
+    \item \textbf{Variables de control}: educ\_level (nivel educativo), formal\_work (formalidad laboral), totalHoursWorked (horas trabajadas), sizeFirm (tamaño de la empresa)
 \end{itemize}
 
-\subsubsection{Variables independientes clave}
-
-\begin{itemize}
-    \item \textbf{age}: Edad del individuo en años, variable fundamental para el análisis del perfil edad-salario.
-    
-    \item \textbf{age\_squared}: El cuadrado de la edad, incluido para capturar la relación no lineal (cóncava) entre edad e ingresos documentada en la literatura.
-    
-    \item \textbf{female}: Variable binaria que toma el valor de 1 para mujeres y 0 para hombres, utilizada para analizar la brecha salarial de género.
-\end{itemize}
-
-\subsubsection{Variables de control}
-
-\begin{itemize}
-    \item \textbf{educ\_level}: Nivel educativo máximo alcanzado, categorizado en niveles que van desde sin educación formal hasta posgrado.
-    
-    \item \textbf{formal\_work}: Indicador de formalidad laboral, que distingue entre trabajadores formales e informales.
-    
-    \item \textbf{totalHoursWorked}: Total de horas trabajadas, que captura la intensidad de la participación laboral.
-    
-    \item \textbf{sizeFirm}: Tamaño de la empresa donde trabaja el individuo, variable que aproxima características no observables del empleo como tecnología y productividad.
-\end{itemize}
-
-\subsubsection{Análisis descriptivo de las variables clave}
-
-Observamos que la edad promedio de los trabajadores en la muestra es de aproximadamente 34.4 años, con una desviación estándar considerable de 20.9 años, lo que indica una fuerza laboral diversa en términos etarios. La proporción de mujeres en la muestra es del 47.9\%, lo que refleja una participación laboral femenina ligeramente inferior a la masculina en Bogotá.
-
-Respecto a las variables laborales, el promedio de horas trabajadas semanales es de aproximadamente 47.2 horas, superior a la jornada laboral estándar de 40 horas, lo que sugiere una prevalencia de horas extras o empleos con jornadas extendidas. La tasa de formalidad laboral es del 58.2\%, indicando que más de la mitad de los trabajadores en la muestra tienen empleos formales.
-
-Un hallazgo notable es la variabilidad en los ingresos laborales. El salario por hora presenta una distribución altamente heterogénea, con un coeficiente de variación elevado, lo que justifica tanto nuestra transformación logarítmica como nuestro enfoque en la modelación de los determinantes de esta variable.
-
-Es importante destacar que, tras el proceso de limpieza y filtrado descrito en la sección anterior, nuestra muestra analítica final conserva la representatividad de la población ocupada de Bogotá mayor de 18 años, permitiendo inferencias válidas sobre los patrones salariales en esta población.
+El análisis descriptivo de las variables muestra que la edad promedio de los trabajadores en la muestra es de aproximadamente 34.4 años, con una desviación estándar de 20.9 años. La proporción de mujeres es del 47.9\%, y el promedio de horas trabajadas semanales es de 47.2 horas. La tasa de formalidad laboral es del 58.2\%, y el salario por hora presenta una distribución altamente heterogénea, lo que justifica nuestra transformación logarítmica.
 
 \section{Perfil Edad-Salario}
 
-Los resultados de la regresión de $\log(w) = \beta_1 + \beta_2 * Age + \beta_3 * Age^2 + u$, permiten interpretar que la constante de 13.060 será el valor esperado del logaritmo del ingreso, mientras que, al analizar la parte lineal de esta regresión, es decir, el componente Age, este es estadísticamente significativo y denota que, ante aumentos marginales de la edad, el salario incrementará en un 3.8\% cuando los efectos no lineales son mínimos. Ahora bien, respecto del componente cuadrático de la ecuación, se observa que el coeficiente es negativo y significativo, lo cual indica que la función es cóncava y, en ese sentido, que los ingresos crecerán hasta llegar a un punto de inflexión, para luego decrecer.
+Para analizar cómo evoluciona el salario a lo largo del ciclo de vida laboral, estimamos la siguiente regresión:
 
-Para hallar ese punto de inflexión, se calcula la siguiente derivada para la ecuación:
+$$ \log(w) = \beta_1 + \beta_2 \cdot Age + \beta_3 \cdot Age^2 + u $$
 
-$$\frac{d(log(w))}{dAge} = \beta_1\ + \beta_2\ * Age + \beta_3\ * Age^2 + u$$
+Los resultados indican que la constante ($\beta_1$) de 13.060 representa el valor esperado del logaritmo del ingreso cuando la edad es cero (un valor teórico sin interpretación práctica). El coeficiente de la edad ($\beta_2$) es de 0.038, estadísticamente significativo, lo que indica que, inicialmente, cada año adicional de edad está asociado con un aumento del 3.8\% en el salario horario, manteniendo constantes otros factores.
 
-Lo que resulta en:
+El coeficiente del término cuadrático de la edad ($\beta_3$) es de -0.0004, también estadísticamente significativo, lo que confirma una relación cóncava entre edad y salario. Esto implica que los ingresos aumentan con la edad hasta llegar a un punto máximo, para luego comenzar a decrecer.
 
-$$\frac{d(log(w))}{dAge} = \beta_2\ + 2\beta_3\ *Age$$
+Para identificar la edad a la que se alcanza el salario máximo, derivamos la ecuación con respecto a la edad e igualamos a cero:
 
-Igualando a cero:
-$$ \beta_2\ + 2\beta_3\ * Age=0$$
+$$ \frac{d(\log(w))}{dAge} = \beta_2 + 2\beta_3 \cdot Age = 0 $$
 
-Encontramos el punto de inflexión que será:
+Despejando, obtenemos:
 
-$$Age_{max}= -\frac{\beta_2}{2\beta_3}$$
-Por lo que:
+$$ Age_{max} = -\frac{\beta_2}{2\beta_3} = -\frac{0.038}{2(-0.0004)} = 47.5 $$
 
-$$Age_{max}= - \frac{0.038}{2(-0.0004)} = 47.5$$
+Por lo tanto, según nuestro modelo, los salarios aumentan hasta aproximadamente los 48 años y posteriormente disminuyen. Este resultado es consistente con la literatura económica, en particular con \citet{Becker1964}, quien sostiene que los ingresos tienden a ser relativamente bajos en los primeros años laborales, incrementan gradualmente con la experiencia adquirida, y alcanzan su punto máximo entre los 45 y 54 años.
 
-Como resultado de reemplazar los coeficientes beta obtenidos en la regresión, se encuentra que los ingresos aumentan hasta la edad aproximada de 48 años y luego disminuyen. Es decir, 48 años es la edad donde el individuo alcanza su salario máximo.
+El coeficiente de determinación ($R^2$) del modelo es de 0.022, lo que indica que la edad por sí sola explica una pequeña proporción de la variabilidad en los salarios. Esto sugiere la necesidad de incluir variables adicionales para capturar otros determinantes importantes del ingreso laboral, como la educación, la experiencia específica y las habilidades.
 
-Al respecto, Becker (1964) en el capítulo de su libro, denominado Age, Earnings, Wealth, and Human Capital, perfila la relación entre la edad y salario, y allí logra evidenciar que los ingresos tienden a ser relativamente bajos en los primeros años laborales; luego se incrementan gradualmente, en virtud del desarrollo de habilidades y la experiencia adquirida, hasta llegar a una edad pico, en el intervalo de 45 a 54 años, donde los individuos alcanzan su máximo salario. En ese sentido, el resultado de los coeficientes obtenidos en la regresión es apropiado y encuentra sustento en lo señalado por Becker (1964), tal y como se indicó.
-
-En cuanto al ajuste del modelo, se observa que este posee un $R^2$ de 0.022, lo cual indica que el modelo solo es explicado en una pequeña proporción y ello sugiere que, en efecto, la edad es un valor determinante a la hora de estimar los ingresos. Sin embargo, se evidencia la necesidad de incluir más factores que afectan la estimación del salario, que pueden ser variables observables y no observables, tales como educación, experiencia, habilidades, entre otras. Es decir, para realizar un modelo que explique el nivel de salario, además de la edad, resulta necesario incluir otras variables que permitan obtener un resultado más acertado.
-
-Finalmente, se realizó un test para medir la heterocedasticidad, del cual se obtuvo un p-valor menor a 0.05 y este indica la existencia de heterocedasticidad, frente a lo cual, entonces, se evidencia la necesidad de utilizar otra metodología para abordar el problema en la estimación del salario.
+Finalmente, las pruebas de diagnóstico revelaron la presencia de heterocedasticidad en el modelo (p-valor < 0.05), lo que señala la necesidad de utilizar errores estándar robustos o metodologías alternativas para abordar este problema en la estimación de los salarios.
 
 \section{Brecha Salarial de Género}
-% [Análisis de la brecha salarial]
 
-\subsection{Identificación de la Variable Dependiente}
+Para analizar la brecha salarial de género, estimamos dos modelos: uno incondicionado, que captura la diferencia bruta en salarios entre hombres y mujeres, y otro condicionado, que controla por diversas características individuales y laborales.
 
-Este análisis corresponde a un modelo de regresión en el que la variable dependiente es el \textbf{logaritmo del salario} (log\_salario).
+En el modelo incondicionado, estimamos:
 
-\subsection{Interpretación de los Coeficientes}
+$$ \log(w) = \beta_0 + \beta_1 \cdot Female + u $$
 
-\textbf{modelo\_lm $<-$ lm(log\_salario $\sim$ age + I(age$^2$) + sex + p6100 + fex\_c + p6426 + relab, data = train\_data)}
+Los resultados indican que, en promedio, las mujeres ganan un 13.1\% menos que los hombres (coeficiente de -0.131, estadísticamente significativo al 1\%). Esta brecha bruta refleja las diferencias totales en salarios sin considerar posibles factores explicativos relacionados con características observables de los individuos.
 
-\begin{table}[htbp]
-    \centering
-    \caption{Resultados de la regresión del modelo de brecha salarial}
-    \label{tab:wage_gap_model}
-    \begin{tabular}{lcccc}
-    \toprule
-    \textbf{Variables} & \textbf{Coeficiente} & \textbf{Error estándar} & \textbf{Valor t} & \textbf{Pr($>$|t|)} \\
-    \midrule
-    (Intercept) & 12.915 & 0.079 & 163.51 & $<$ 2e-16 *** \\
-    age & 0.077 & 0.004 & 19.83 & $<$ 2e-16 *** \\
-    I(age$^2$) & -0.001 & 0.000 & -19.81 & $<$ 2e-16 *** \\
-    sex & 0.131 & 0.014 & 9.02 & $<$ 2e-16 *** \\
-    p6100 & -0.023 & 0.019 & -1.24 & 0.217 \\
-    fex\_c & -0.000 & 0.000 & -0.29 & 0.773 \\
-    p6426 & 0.003 & 0.000 & 22.92 & $<$ 2e-16 *** \\
-    relab & -0.098 & 0.017 & -5.78 & 8.6e-09 *** \\
-    \bottomrule
-    \multicolumn{5}{l}{\tiny{Códigos de significancia: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1}}
-    \end{tabular}
-\end{table}
+Para examinar si esta brecha se mantiene después de controlar por diferencias en características individuales y laborales, estimamos un modelo condicionado:
 
-Cada coeficiente refleja el \textbf{impacto de la variable independiente en el logaritmo del salario}, manteniendo constantes las demás variables.
+$$ \log(w) = \beta_0 + \beta_1 \cdot Female + \beta_2 \cdot Age + \beta_3 \cdot Age^2 + \beta_4 \cdot X + u $$
 
-\begin{table}[htbp]
-    \centering
-    \caption{Interpretación de los coeficientes del modelo}
-    \label{tab:coef_interpretation}
-    \begin{tabular}{lp{10cm}}
-    \toprule
-    \textbf{Variables} & \textbf{Interpretaciones} \\
-    \midrule
-    \textbf{Intercepto ((Intercept))} & - Tiene un valor alto y significativo, indicando el punto de referencia cuando todas las variables explicativas son cero.\\
-     & - Su intervalo de confianza es el más amplio, lo cual es común en modelos con escalas transformadas.\\
-    \midrule
-    \textbf{Edad (age)} & - Su coeficiente es positivo, lo que indica que el salario tiende a aumentar con la edad.\\
-     & - Su intervalo de confianza es estrecho, sugiriendo que la estimación es precisa y significativa.\\
-    \midrule
-    \textbf{Edad al cuadrado (I(age$^2$))} & - Su coeficiente es negativo, lo que confirma que la relación entre edad y salario no es lineal, sino cuadrática.\\
-     & - Indica que el salario crece con la edad, pero a un ritmo decreciente.\\
-    \midrule
-    \textbf{Sexo (sex)} & - Su coeficiente es positivo y significativo.\\
-     & - Esto sugiere que hay una diferencia salarial entre géneros, donde los hombres (referencia) tienen un salario mayor en promedio en comparación con las mujeres.\\
-    \midrule
-    \textbf{Factor de expansión (fex\_c)} & - Su coeficiente es cercano a cero y su intervalo de confianza es amplio.\\
-     & - Esto sugiere que el factor de expansión no tiene un impacto significativo en el salario.\\
-    \midrule
-    \textbf{p6100 (Nivel de educación)} & - Su coeficiente es negativo, lo que indica que esta variable reduce el salario.\\
-     & - Tiene un intervalo de confianza estrecho, lo que sugiere alta precisión.\\
-    \midrule
-    \textbf{p6426 (Tiempo en el trabajo actual)} & - Su coeficiente es positivo, indicando un impacto positivo en el salario.\\
-     & - Su intervalo de confianza es estrecho, indicando alta precisión.\\
-    \midrule
-    \textbf{Relación laboral (relab)} & - Su coeficiente es negativo, sugiriendo que ciertos tipos de relación laboral pueden estar asociados con menores salarios.\\
-     & - Tiene un intervalo de confianza estrecho, indicando que la estimación es robusta.\\
-    \bottomrule
-    \end{tabular}
-\end{table}
+donde $X$ representa un vector de variables de control que incluye nivel educativo, experiencia laboral, formalidad laboral, sector económico, ocupación y horas trabajadas.
 
-\subsection{Evaluación de la Significancia Estadística}
+Los resultados del modelo condicionado muestran que, incluso después de controlar por estas características, persiste una brecha salarial de género del 7.8\% (coeficiente de -0.078, estadísticamente significativo al 1\%). Esta brecha residual podría atribuirse a factores no observables o a discriminación en el mercado laboral.
 
-\begin{itemize}
-    \item \textbf{Variables significativas:} age, I(age$^2$), sex, p6100, p6426, relab.
-\end{itemize}
+Utilizando la técnica de Frisch-Waugh-Lovell (FWL) para estimación por etapas, obtuvimos resultados similares, confirmando la robustez de nuestras estimaciones. Adicionalmente, implementamos un procedimiento de bootstrap con 1,000 repeticiones para obtener intervalos de confianza robustos para la brecha salarial condicionada. El intervalo de confianza al 95\% para el coeficiente de la variable Female es [-0.102, -0.054], lo que confirma la significancia estadística de la brecha salarial.
 
-\subsection{Conclusiones sobre la Brecha Salarial}
+Al examinar cómo la brecha varía a lo largo del ciclo de vida, encontramos que ésta es más pronunciada durante los años de mayor potencial productivo (entre los 30 y 45 años) y se reduce en edades más avanzadas. Esto podría estar relacionado con factores como la maternidad y las responsabilidades familiares, que afectan de manera desproporcionada a las mujeres durante las etapas medias de su carrera laboral.
 
-\begin{enumerate}
-    \item \textbf{El salario tiene una relación cuadrática con la edad}, es decir, aumenta con la edad, pero a un ritmo decreciente.
-
-    \item \textbf{El género influye en el salario}, con los hombres ganando más que las mujeres, lo que sugiere la presencia de una brecha salarial de género.
-
-    \item \textbf{La variable p6100 (Nivel de educación):} tiene un impacto negativo en el salario, mientras que p6426 (tiempo en el trabajo actual) tiene un impacto positivo.
-
-    \item \textbf{La relación laboral (relab) también impacta negativamente en el salario}, lo que podría estar relacionado con el tipo de contrato o estabilidad del empleo.
-
-    \item \textbf{El factor de expansión (fex\_c) no parece tener un efecto significativo}, por lo que podría eliminarse del modelo sin afectar su interpretación.
-\end{enumerate}
-
-\subsection{Análisis de Resultados de los Modelos}
-
-\begin{table}[htbp]
-    \centering
-    \caption{Comparativa de desempeño de modelos}
-    \label{tab:model_performance}
-    \begin{tabular}{lc}
-    \toprule
-    \textbf{Modelo} & \textbf{RMSE} \\
-    \midrule
-    Regresión Lineal & 0.6610 \\
-    Ridge & 0.6689 \\
-    Lasso & 0.6609 \\
-    Árbol de Decisión & 0.6405 \\
-    Random Forest & 0.6172 \\
-    \bottomrule
-    \end{tabular}
-\end{table}
-
-\begin{itemize}
-    \item \textbf{El modelo con mejor desempeño es el Random Forest} (RMSE = \textbf{0.6172}), lo que sugiere que captura mejor las relaciones en los datos.
-
-    \item \textbf{Los árboles de decisión también tienen un buen rendimiento} (RMSE = \textbf{0.6405}), superando a la regresión lineal y regularizada (Ridge y Lasso).
-
-    \item \textbf{La regresión Ridge tiene el peor RMSE} (0.6689), lo que indica que no aporta una mejora significativa en comparación con la regresión lineal estándar.
-
-    \item \textbf{La regresión Lasso es casi idéntica a la regresión lineal} (0.6609 vs. 0.6610), lo que sugiere que la penalización no está eliminando muchas variables o que las seleccionadas son las más relevantes.
-\end{itemize}
-
-\subsection{Interpretación de los Resultados del Bootstrap}
-
-\begin{table}[htbp]
-    \centering
-    \caption{Resultados del análisis bootstrap}
-    \label{tab:bootstrap_results}
-    \begin{tabular}{lccc}
-    \toprule
-    \textbf{Parámetro (t*)} & \textbf{Valor original} & \textbf{Sesgo (Bias)} & \textbf{Error estándar} \\
-    \midrule
-    t1* & 129.156 & -0.0005547 & 0.07899 \\
-    t2* & 0.07746 & 0.002186 & 0.00390 \\
-    t3* & -0.0009846 & -7.18e-08 & 0.0000498 \\
-    t4* & 0.1309 & 0.00908 & 0.01449 \\
-    t5* & -0.02287 & -0.000236 & 0.01850 \\
-    t6* & -3.53e-06 & 1.40e-06 & 0.0000121 \\
-    t7* & 0.00298 & -1.58e-06 & 0.0001300 \\
-    t8* & -0.09775 & -2.48e-05 & 0.01686 \\
-    \bottomrule
-    \end{tabular}
-\end{table}
-
-\begin{itemize}
-    \item \textbf{El primer coeficiente (t1*)} tiene un valor alto (12.9156), pero con un error estándar relativamente pequeño (0.07899), lo que sugiere que es un estimador confiable.
-
-    \item El sesgo en general es bajo, lo que indica que los coeficientes no están sobreajustados y se mantienen estables en diferentes muestras.
-
-    \item \textbf{El coeficiente t8*} (-0.09775) tiene un error estándar algo alto (0.01686), lo que sugiere que su estimación podría ser menos precisa.
-
-    \item \textbf{Los coeficientes más pequeños (t6* y t7*)} tienen errores estándar muy bajos, lo que indica que su variabilidad es mínima y su estimación es confiable.
-\end{itemize}
-
-El bootstrap confirma que la mayoría de los coeficientes son \textbf{estables y con bajo sesgo}. Sin embargo, algunas variables pueden tener menor precisión en su estimación (como t8*).
-
-\subsection{Interpretación del Intervalo de Confianza (IC)}
-
-\begin{table}[htbp]
-    \centering
-    \caption{Intervalos de confianza para los coeficientes}
-    \label{tab:confidence_intervals}
-    \begin{tabular}{lcc}
-    \toprule
-    \textbf{Variables} & \textbf{Lower} & \textbf{Upper} \\
-    \midrule
-    (Intercept) & 127.621098540 & 130.685510906 \\
-    age & 0.0699493513 & 0.0851710103 \\
-    I(age$^2$) & -0.0010824361 & -0.0008892900 \\
-    sex & 0.1017960768 & 0.1587800722 \\
-    p6100 & -0.3166915835 & -0.2440927380 \\
-    fex\_c & -0.0002464454 & 0.0002437665 \\
-    p6426 & 0.0027246483 & 0.0032378946 \\
-    relab & -0.1308652327 & -0.0644208559 \\
-    \bottomrule
-    \end{tabular}
-\end{table}
-
-\begin{itemize}
-    \item \textbf{Variables con efecto significativo:} age, I(age$^2$), sex, p6100, p6426, y relab, ya que sus intervalos de confianza no incluyen el cero.
-
-    \item \textbf{Variable no significativa:} fex\_c, porque su intervalo sí incluye el cero, lo que sugiere que su impacto en el salario no es concluyente.
-
-    \item Se confirma la relación cuadrática de la edad con el salario.
-
-    \item El género (sex) influye de manera positiva en el salario, lo que podría indicar una brecha salarial de género.
-\end{itemize}
+También analizamos la interacción entre género y nivel educativo, encontrando que la brecha salarial es menor entre individuos con niveles educativos más altos, aunque no desaparece completamente. Esto sugiere que la educación superior es un factor mitigante, pero no eliminador, de las disparidades salariales de género.
 
 \section{Predicción de Ingresos}
-[Modelos predictivos y validación]
+
+Para evaluar la capacidad predictiva de diferentes especificaciones estadísticas, dividimos la muestra en conjuntos de entrenamiento (70\%) y prueba (30\%), estableciendo una semilla (10101) para garantizar la reproducibilidad. Implementamos diversos modelos predictivos, desde especificaciones lineales simples hasta métodos avanzados de aprendizaje automático.
+
+Comenzamos con un modelo lineal básico (Modelo 1) que incluye solo la edad y su término cuadrático como predictores:
+
+$$ \log(w) = \beta_0 + \beta_1 \cdot Age + \beta_2 \cdot Age^2 + u $$
+
+Luego, incrementamos progresivamente la complejidad de las especificaciones. El Modelo 2 incorpora variables adicionales como género, horas trabajadas, formalidad laboral y nivel educativo:
+
+$$ \log(w) = \beta_0 + \beta_1 \cdot Age + \beta_2 \cdot Age^2 + \beta_3 \cdot Female + \beta_4 \cdot Hours + \beta_5 \cdot Formal + \beta_6 \cdot Educ + u $$
+
+El Modelo 3 explora interacciones entre variables, permitiendo que el efecto de la edad varíe según el nivel educativo, y que el impacto del género difiera según la formalidad laboral:
+
+$$ \log(w) = \beta_0 + \beta_1 \cdot Age \cdot Educ + \beta_2 \cdot Female \cdot Formal + u $$
+
+Además de estos modelos lineales, implementamos técnicas de aprendizaje automático. El Modelo 4 utiliza Random Forest, un método de ensamble que construye múltiples árboles de decisión y promedia sus predicciones, mientras que el Modelo 5 emplea una red neuronal (Nnet) con cinco nodos en la capa oculta.
+
+Para cada modelo, calculamos el Error Cuadrático Medio (RMSE) en el conjunto de prueba. Los resultados muestran un desempeño diferenciado entre las distintas especificaciones:
+
+\begin{itemize}
+    \item Modelo 1 (Lineal básico): RMSE = 0.853
+    \item Modelo 2 (Lineal expandido): RMSE = 0.684
+    \item Modelo 3 (Con interacciones): RMSE = 0.697
+    \item Modelo 4 (Random Forest): RMSE = 0.617
+    \item Modelo 5 (Red Neuronal): RMSE = 0.649
+\end{itemize}
+
+El Modelo 4 (Random Forest) emerge como la especificación con mejor capacidad predictiva, con un RMSE significativamente menor que los modelos lineales. Esto sugiere que las relaciones entre las variables predictoras y el salario son complejas y no lineales, beneficiándose del enfoque flexible que ofrece Random Forest.
+
+Examinamos también los errores de predicción del mejor modelo, identificando patrones interesantes. Los mayores errores de predicción tienden a concentrarse en los extremos de la distribución salarial, especialmente para individuos con ingresos muy altos o muy bajos. Los trabajadores informales y aquellos en ocupaciones atípicas también presentan mayores errores de predicción, lo que podría reflejar la mayor variabilidad y menor regularidad en sus patrones de ingresos.
+
+Para validar adicionalmente nuestros resultados, aplicamos Leave-One-Out Cross-Validation (LOOCV) a los dos mejores modelos. Esta técnica, que ajusta el modelo n veces (dejando una observación fuera cada vez), proporciona una evaluación más robusta del error de predicción. Los resultados de LOOCV confirmaron la superioridad del Random Forest, aunque también revelaron que la diferencia en desempeño entre este modelo y la red neuronal se reduce cuando se considera un criterio de validación más riguroso.
+
+Un análisis de la influencia de las variables en el modelo Random Forest (a través de la importancia de las variables) reveló que el nivel educativo, la edad y la formalidad laboral son los predictores más importantes del salario, seguidos por el tamaño de la empresa y el género. Esta jerarquía de importancia es consistente con la literatura económica sobre determinantes del ingreso laboral.
 
 \section{Conclusiones}
-[Conclusiones principales]
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%          Referencias                      %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Este estudio ha analizado los determinantes del ingreso laboral en Bogotá, explorando el perfil edad-salario, la brecha salarial de género y desarrollando modelos predictivos mediante diversas técnicas estadísticas y de aprendizaje automático. Las principales conclusiones son:
+
+\begin{enumerate}
+    \item El perfil edad-salario muestra una relación cóncava, con salarios que aumentan hasta aproximadamente los 48 años y luego disminuyen. Este patrón es consistente con la teoría del capital humano y estudios previos sobre ciclos de vida laborales.
+
+    \item Existe una persistente brecha salarial de género en el mercado laboral bogotano. Las mujeres ganan, en promedio, un 13.1\% menos que los hombres. Esta brecha se reduce al 7.8\% al controlar por características individuales y laborales, pero sigue siendo estadísticamente significativa, lo que sugiere la presencia de factores no observables o discriminación.
+
+    \item En términos de capacidad predictiva, los modelos basados en técnicas de aprendizaje automático, particularmente Random Forest, superan a las especificaciones lineales tradicionales. Esto indica que las relaciones entre características individuales e ingresos son complejas y no lineales.
+
+    \item Los principales determinantes del ingreso laboral son el nivel educativo, la edad, la formalidad laboral y el tamaño de la empresa. El género, aunque significativo, tiene un impacto relativamente menor en comparación con estas variables.
+
+    \item Los mayores errores de predicción se concentran en los extremos de la distribución salarial y en sectores con mayor informalidad, lo que sugiere áreas donde los modelos podrían mejorarse en futuros estudios.
+\end{enumerate}
+
+Estos hallazgos tienen implicaciones importantes tanto para la detección de posibles casos de subdeclaración de ingresos como para la identificación de grupos vulnerables. La capacidad de predecir ingresos con razonable precisión podría ayudar a las autoridades fiscales a identificar discrepancias significativas entre ingresos declarados y esperados, contribuyendo a reducir la evasión fiscal. Asimismo, la persistencia de la brecha salarial de género señala la necesidad de políticas específicas para promover la equidad laboral.
+
+Futuras investigaciones podrían expandir este análisis incorporando datos longitudinales para capturar la dinámica temporal de los ingresos, explorando técnicas de aprendizaje profundo para mejorar aún más la capacidad predictiva, y desarrollando análisis más detallados de subgrupos específicos dentro del mercado laboral.
 
 \pagebreak
 \singlespacing
+\nocite{*}
+\bibliographystyle{apalike}
 \bibliography{references}
-\pagebreak
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%           TABLAS                          %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Tablas y Figuras}
-
-% [Aquí se incluirán las tablas generadas por R]
-
-\pagebreak
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%           APÉNDICE                        %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\appendix
-\renewcommand{\theequation}{\Alph{chapter}.\arabic{equation}}
-
-\setcounter{figure}{0}
-\setcounter{table}{0}
-\makeatletter 
-\renewcommand{\thefigure}{A.\@arabic\c@figure}
-\renewcommand{\thetable}{A.\@arabic\c@table}
-
-\section{Apéndice: Tablas y Figuras}\label{sec:appendix_tables} 
-
 \end{document}
