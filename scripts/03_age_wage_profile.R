@@ -1,81 +1,123 @@
-# Regresión para estimar el perfil
+# ========================================================================
+# 03_age_wage_profile.R
+# Limpieza del entorno antes de ejecutar
+# ========================================================================
 
-reg3 <- lm(log(ingtot) ~ age + I(age^2), data = GEIH_seleccionado, a.action = na.exclude )
+rm(list = ls())  # Elimina todos los objetos del entorno de trabajo para evitar conflictos
+message("Entorno limpio. Ejecutando el script...")
 
-# Exportar resultados con formato AER
-stargazer(reg3, type = "text", title = "Regresión Edad-Salario",
-          star.cutoffs = NA,
-          omit.stat = c("ser", "adj.rsq", "f"),  
-          dep.var.labels.include = FALSE, 
-          no.space = TRUE, 
+# Cargar paquetes necesarios
+if(!require(pacman)) install.packages("pacman")
+pacman::p_load(rio, tidyverse, lmtest, car, boot, stargazer, gridExtra, ggplot2)
+
+# ========================================================================
+# 1. Cargar datos limpios
+# ========================================================================
+message("Cargando datos procesados...")
+geih_clean <- readRDS("stores/processed/geih_2018_clean.rds")
+
+# ========================================================================
+# 2. Estimación del perfil edad-salario
+# ========================================================================
+message("Estimando el perfil edad-salario...")
+
+age_wage_model <- lm(log(ingtot) ~ age + I(age^2), data = geih_clean, na.action = na.exclude)
+
+# Guardar resultados para su uso en el informe
+saveRDS(age_wage_model, "stores/processed/age_wage_model.rds")
+
+# Exportar tabla de resultados con formato AER 
+stargazer(age_wage_model, 
+          type = "latex",
+          title = "Regresión Edad-Salario",
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          omit.stat = c("ser", "adj.rsq", "f"),
+          dep.var.labels.include = FALSE,
+          no.space = TRUE,
           notes = "",
-          notes.append = FALSE)  
+          notes.append = FALSE,
+          out = "views/tables/age_wage_regression.tex")
 
+# ========================================================================
+# 3. Prueba de heterocedasticidad
+# ========================================================================
+message("Realizando prueba de heterocedasticidad...")
+heteroskedasticity_test <- bptest(age_wage_model, 
+                                  ~ age + I(age^2) + fitted(age_wage_model)^2, 
+                                  data = geih_clean)
+print(heteroskedasticity_test)
 
-# Prueba de Heterocedasticidad
-bptest(reg3, ~ age + I(age^2) + fitted(reg3)^2, data = GEIH_seleccionado)
-
-# Bootstrap para intervalo de confianza
+# ========================================================================
+# 4. Bootstrap para intervalo de confianza de la edad máxima
+# ========================================================================
+message("Realizando bootstrap para intervalos de confianza...")
 
 boot_fn <- function(data, index) {
-  sample_data <- data[index, ]  # Tomamos la muestra bootstrap
-  model <- lm(log(ingtot) ~ age + I(age^2), data = sample_data)  # Ajustamos el modelo
-  return(coef(model))  # Retornamos los coeficientes
+  sample_data <- data[index, ]
+  model <- lm(log(ingtot) ~ age + I(age^2), data = sample_data)
+  return(coef(model))
 }
 
-# Aplicar bootstrap con 10000 repeticiones
 set.seed(3589)
-boot_results <- boot(GEIH_seleccionado, boot_fn, R = 1000)
+boot_results <- boot(geih_clean, boot_fn, R = 1000)
 
-# Extraer coeficientes bootstrap
 beta1 <- boot_results$t[, 2]  # Coeficiente de age
 beta2 <- boot_results$t[, 3]  # Coeficiente de age^2
-
-# Calcular la edad máxima en cada iteración bootstrap
 edad_maxima_boot <- -beta1 / (2 * beta2)
-
-# Calcular IC del 95% para la edad máxima
 edad_maxima_ic <- quantile(edad_maxima_boot, probs = c(0.025, 0.975))
+edad_maxima_media <- mean(edad_maxima_boot)
 
-# Crear datos para la curva estimada
-edad_seq <- seq(min(GEIH_seleccionado$age, na.rm = TRUE), 
-                max(GEIH_seleccionado$age, na.rm = TRUE), length.out = 90)
+bootstrap_results <- list(
+  boot_object = boot_results,
+  max_age_mean = edad_maxima_media,
+  max_age_ci = edad_maxima_ic
+)
 
-# Crear nuevo data.frame para predicción
+saveRDS(bootstrap_results, "stores/processed/age_wage_bootstrap.rds")
+
+message(paste("Edad máxima estimada:", round(edad_maxima_media, 2), 
+              "años (IC 95%: [", round(edad_maxima_ic[1], 2), 
+              ",", round(edad_maxima_ic[2], 2), "])"))
+
+# ========================================================================
+# 5. Visualización del perfil edad-salario
+# ========================================================================
+message("Creando visualización del perfil edad-salario...")
+
+edad_seq <- seq(min(geih_clean$age, na.rm = TRUE), 
+                max(geih_clean$age, na.rm = TRUE), 
+                length.out = 100)
+
 nuevo_df <- data.frame(age = edad_seq)
+predicciones <- predict(age_wage_model, newdata = nuevo_df, interval = "confidence")
 
-# Realizar predicciones con IC
-predicciones <- predict(reg3, newdata = nuevo_df, interval = "confidence")
+pred_df <- data.frame(
+  age = edad_seq, 
+  fit = predicciones[, "fit"], 
+  lwr = predicciones[, "lwr"], 
+  upr = predicciones[, "upr"]
+)
 
-# Convertir predicciones en data.frame
-pred_df <- data.frame(age = edad_seq, 
-                      fit = predicciones[, "fit"], 
-                      lwr = predicciones[, "lwr"], 
-                      upr = predicciones[, "upr"])
+age_wage_plot <- ggplot(data = geih_clean, aes(x = age, y = log(ingtot))) +
+  geom_point(size = 0.8, alpha = 0.3, color = "grey50") +
+  geom_line(data = pred_df, aes(x = age, y = fit), color = "black", size = 1) +
+  geom_ribbon(data = pred_df, aes(x = age, ymin = lwr, ymax = upr), 
+              fill = "grey30", alpha = 0.2) +
+  labs(x = "Edad", 
+       y = "Log(Salario por Hora)",
+       title = "Perfil Edad-Salario") +
+  theme_classic()
 
-pred_df$ingtot <- exp(pred_df$fit)
+# Guardar gráfico
+ggsave("views/figures/age_wage_profile.png", plot = age_wage_plot, width = 8, height = 6, dpi = 300)
 
-# Convertir los límites del intervalo de confianza a la escala original
-pred_df$lwr_ingtot <- exp(pred_df$lwr)
-pred_df$upr_ingtot <- exp(pred_df$upr)
+# ========================================================================
+# 6. Cálculo formal de la edad de máximo salario
+# ========================================================================
+beta1_hat <- coef(age_wage_model)[2]  # Coeficiente de age
+beta2_hat <- coef(age_wage_model)[3]  # Coeficiente de age^2
 
-# Crear gráfico con ggplot2 usando formato AER
-ggplot(data = GEIH_seleccionado, aes(x = age, y = log(ingtot))) +
-  geom_point(size = 1.5, alpha = 0.7, color = "grey") +  
-  geom_smooth(method = "lm", color = "black", se = FALSE, linetype = "dashed") +  
-  geom_line(data = data.frame(age = edad_seq, fit = predicciones[, "fit"]),
-            aes(x = age, y = fit), color = "black", size = 1) +  
-  geom_ribbon(data = pred_df, aes(x = age, ymin = lwr, ymax = upr), fill = "grey", alpha = 0.2) +  
-  geom_vline(xintercept = mean(edad_maxima_boot), linetype = "dashed", color = "black", size = 1) +  
-  annotate("text", x = mean(edad_maxima_boot) + 2, y = max(predicciones[, "fit"]),
-           label = paste0("Edad Máx: ", round(mean(edad_maxima_boot), 1), " años\nIC: [",
-                          round(edad_maxima_ic[1], 1), ", ", round(edad_maxima_ic[2], 1), "]"),
-           color = "black", size = 4, hjust = 0) +  
-  labs(x = "Edad", y = "Log(Ingresos Totales)") +  
-  theme_classic() +  
-  theme(
-    text = element_text(size = 14), 
-    axis.title = element_text(face = "bold"),  
-    axis.text = element_text(color = "black"),  
-    plot.caption = element_text(hjust = 0, face = "italic")  
-  )
+max_age <- -beta1_hat / (2 * beta2_hat)
+
+message("Análisis del perfil edad-salario completado exitosamente.")
+message(paste("La edad de máximo salario estimada es:", round(max_age, 2), "años."))
